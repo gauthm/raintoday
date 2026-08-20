@@ -14,10 +14,12 @@ export function initMap(lat, lon) {
     attributionControl: true,
   }).setView([lat, lon], 9);
 
-  // Dark base layer (CartoDB Dark Matter)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
+  // Base layer (OpenStreetMap — no watermark)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap',
     maxZoom: 19,
+    detectRetina: false,
+    subdomains: ['a', 'b', 'c'],
   }).addTo(map);
 
   return map;
@@ -27,32 +29,79 @@ export function initMap(lat, lon) {
  * Add or replace the radar tile layer on the map.
  * @param {object} map - Leaflet map instance
  * @param {string} host - RainViewer tile host
- * @param {number} timestamp - Unix timestamp (seconds)
+ * @param {string} path - Frame path (e.g. /v2/radar/abc123)
  * @param {object} options - { color, size, smooth, snow, opacity }
  * @returns {object} The radar tile layer
  */
 let currentRadarLayer = null;
+let previousRadarLayer = null;
 
-export function setRadarLayer(map, host, timestamp, options = {}) {
-  // Remove existing radar layer
-  if (currentRadarLayer) {
-    map.removeLayer(currentRadarLayer);
-  }
-
+export function setRadarLayer(map, host, path, options = {}) {
   const color = options.color ?? 2;
   const size = options.size ?? 256;
   const smooth = options.smooth ?? 1;
   const snow = options.snow ?? 1;
   const opacity = options.opacity ?? 0.8;
 
-  const tileUrl = `${host}/v2/radar/${timestamp}/${size}/{z}/{x}/{y}/${color}/${smooth}_${snow}.png`;
+  const tileUrl = `${host}${path}/${size}/{z}/{x}/{y}/${color}/${smooth}_${snow}.png`;
+
+  // Remove previous-previous layer if still around
+  if (previousRadarLayer) {
+    map.removeLayer(previousRadarLayer);
+    previousRadarLayer = null;
+  }
+
+  // Move current to previous, create new layer on top
+  previousRadarLayer = currentRadarLayer;
 
   currentRadarLayer = L.tileLayer(tileUrl, {
     opacity: opacity,
     zIndex: 200,
+    maxNativeZoom: 7,
+    maxZoom: 19,
+    detectRetina: false,
   }).addTo(map);
 
+  currentRadarLayer.on('tileerror', (e) => {
+    console.warn('Radar tile error:', e.tile.src);
+  });
+
+  // Remove previous layer once new one has loaded its first tile
+  currentRadarLayer.once('tileload', () => {
+    if (previousRadarLayer) {
+      map.removeLayer(previousRadarLayer);
+      previousRadarLayer = null;
+    }
+  });
+
+  // Fallback: remove previous after 3s even if no tileload fired
+  setTimeout(() => {
+    if (previousRadarLayer) {
+      map.removeLayer(previousRadarLayer);
+      previousRadarLayer = null;
+    }
+  }, 3000);
+
   return currentRadarLayer;
+}
+
+/**
+ * Offset the radar tile layer by a number of pixels (for future extrapolation).
+ * @param {object} map - Leaflet map instance
+ * @param {number} dx - X offset in pixels
+ * @param {number} dy - Y offset in pixels
+ */
+export function setRadarOffset(map, dx = 0, dy = 0) {
+  if (!currentRadarLayer) return;
+
+  const container = currentRadarLayer.getContainer();
+  if (!container) return;
+
+  if (dx === 0 && dy === 0) {
+    container.style.transform = '';
+  } else {
+    container.style.transform = `translate(${dx}px, ${dy}px)`;
+  }
 }
 
 /**
@@ -60,6 +109,10 @@ export function setRadarLayer(map, host, timestamp, options = {}) {
  * @param {object} map - Leaflet map instance
  */
 export function clearRadarLayer(map) {
+  if (previousRadarLayer) {
+    map.removeLayer(previousRadarLayer);
+    previousRadarLayer = null;
+  }
   if (currentRadarLayer) {
     map.removeLayer(currentRadarLayer);
     currentRadarLayer = null;
@@ -116,7 +169,7 @@ export function showRadarUnavailable(map, show) {
     radarBadge = L.control({ position: 'topright' });
     radarBadge.onAdd = function () {
       const div = L.DomUtil.create('div', 'radar-badge');
-      div.style.cssText = 'background:rgba(15,15,30,0.9);backdrop-filter:blur(10px);border:1px solid rgba(255,80,80,0.4);border-radius:8px;padding:6px 12px;font-size:12px;color:#ff8080;margin-top:50px;margin-right:10px;';
+      div.style.cssText = 'background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);border:1px solid rgba(255,80,80,0.4);border-radius:8px;padding:6px 12px;font-size:12px;color:#cc0000;margin-top:50px;margin-right:10px;';
       div.textContent = 'Radar indisponible';
       return div;
     };

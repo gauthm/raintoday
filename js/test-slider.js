@@ -3,7 +3,7 @@ import { timeToPercent, percentToTime, snapToInterval, findNearestFrame, clamp }
 
 test('timeToPercent returns 0 for start time', () => {
   const start = 1700000000;
-  const end = 1700009000; // 1.5h later
+  const end = 1700009000;
   const pct = timeToPercent(start, start, end);
   assertApprox(pct, 0, 0.01);
 });
@@ -32,21 +32,24 @@ test('percentToTime is inverse of timeToPercent', () => {
 });
 
 test('snapToInterval rounds to nearest 10min', () => {
-  // 1700000350 / 600 = 2833333.917 -> rounds up to 2833334 -> 1700000400
   const snapped = snapToInterval(1700000350, 600);
   assertEq(snapped, 1700000400);
 });
 
 test('snapToInterval rounds down when closer', () => {
-  // 1700000050 / 600 = 2833333.417 -> rounds down to 2833333 -> 1699999800
   const snapped = snapToInterval(1700000050, 600);
   assertEq(snapped, 1699999800);
 });
 
 test('findNearestFrame returns closest frame index', () => {
-  const frames = [1700000000, 1700000600, 1700001200, 1700001800];
+  const frames = [
+    { time: 1700000000, path: '/a' },
+    { time: 1700000600, path: '/b' },
+    { time: 1700001200, path: '/c' },
+    { time: 1700001800, path: '/d' },
+  ];
   const idx = findNearestFrame(frames, 1700001000);
-  assertEq(idx, 2); // closest to 1700001200
+  assertEq(idx, 2);
 });
 
 test('findNearestFrame returns -1 for empty array', () => {

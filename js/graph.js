@@ -7,14 +7,14 @@ import { colorForPrecipitation } from './api/openmeteo.js';
  * Map a precipitation value (mm/h) to a bar height using logarithmic scale.
  * @param {number} mmh - Precipitation in mm/h
  * @param {number} maxHeight - Max bar height in pixels
+ * @param {number} maxValue - Max value in dataset for auto-scaling (default 60)
  * @returns {number} Bar height in pixels (min 2px)
  */
-export function mapValueToHeight(mmh, maxHeight) {
+export function mapValueToHeight(mmh, maxHeight, maxValue = 60) {
   if (mmh <= 0) return 2; // minimum visible height
-  // Logarithmic scale: log10(mmh + 1) / log10(61) * maxHeight
-  // Max meaningful value ~60 mm/h
+  // Logarithmic scale relative to maxValue
   const logVal = Math.log10(mmh + 1);
-  const logMax = Math.log10(61);
+  const logMax = Math.log10(maxValue + 1);
   const height = (logVal / logMax) * maxHeight;
   return Math.max(2, Math.min(maxHeight, height));
 }
@@ -77,6 +77,10 @@ export function renderGraph(canvas, data, currentIndex) {
     return;
   }
 
+  // Auto-scale: use max value in data, with a floor of 1 mm/h
+  const dataMax = Math.max(...data.map(d => d.value));
+  const maxValue = Math.max(1, dataMax);
+
   const barCount = data.length;
   const gap = 2;
   const barWidth = Math.max(1, (cssWidth - gap * (barCount - 1)) / barCount);
@@ -88,7 +92,7 @@ export function renderGraph(canvas, data, currentIndex) {
 
   for (let i = 0; i < barCount; i++) {
     const value = data[i].value;
-    const height = mapValueToHeight(value, maxHeight);
+    const height = mapValueToHeight(value, maxHeight, maxValue);
     const x = i * (barWidth + gap);
     const y = cssHeight - height;
 
@@ -114,8 +118,8 @@ export function renderGraph(canvas, data, currentIndex) {
       ctx.closePath();
       ctx.fill();
     } else {
-      // Past bars: 0.4 opacity, future bars: 0.5 opacity
-      ctx.globalAlpha = i < nowIdx ? 0.4 : 0.5;
+      // Past bars: 0.5 opacity, future bars: 0.7 opacity
+      ctx.globalAlpha = i < nowIdx ? 0.5 : 0.7;
       ctx.fillStyle = color;
       ctx.fillRect(x, y, barWidth, height);
     }

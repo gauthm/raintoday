@@ -1,2 +1,26 @@
-.superpowers/
+# Dependencies
+node_modules/
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Superpowers
+.superpowers/
+
+# Logs
+*.log
+
+# Env
+.env
+.env.local
+
+# Build output (if ever needed)
+dist/
+build/

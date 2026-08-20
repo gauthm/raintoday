@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>RainToday — Radar Pluie</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -20,7 +24,7 @@
   <!-- Top right: geolocation button -->
   <button id="geoloc-btn" class="glass-overlay" title="Ma position" aria-label="Ma position">📍</button>
 
-  <!-- Left overlay: color legend -->
+  <!-- Right overlay: color legend (below geoloc button) -->
   <div id="legend" class="glass-overlay">
     <div class="legend-title">mm/h</div>
     <div class="legend-bar">
@@ -44,13 +48,17 @@
       <div id="current-time">--:--</div>
       <div id="precip-info">Chargement...</div>
       <button id="play-btn">▶ Play</button>
+      <button id="now-btn" title="Revenir à maintenant">Maintenant</button>
     </div>
     <canvas id="graph-canvas"></canvas>
     <div id="time-labels"></div>
     <div id="slider-container">
-      <div id="slider-track">
-        <div id="slider-fill"></div>
-        <div id="slider-handle"></div>
+      <div id="slider-wrapper">
+        <div id="slider-track">
+          <div id="slider-fill"></div>
+          <div id="slider-handle"></div>
+        </div>
+        <div id="slider-ticks"></div>
       </div>
     </div>
   </div>

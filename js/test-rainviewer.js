@@ -1,40 +1,39 @@
 import { test, assert, assertArrayLen } from './test-runner.js';
 import { fetchRadarFrames, buildTileUrl, selectFrames } from './api/rainviewer.js';
 
-test('buildTileUrl produces correct URL format', () => {
-  const url = buildTileUrl('https://tilecache.rainviewer.com', 1700000000, 10, 5, 3, { color: 2, size: 256 });
+test('buildTileUrl produces correct URL with path', () => {
+  const url = buildTileUrl('https://tilecache.rainviewer.com', '/v2/radar/abc123', { color: 2, size: 256 });
   assert(
-    url === 'https://tilecache.rainviewer.com/v2/radar/1700000000/256/10/5/3/2/0_0.png',
+    url === 'https://tilecache.rainviewer.com/v2/radar/abc123/256/{z}/{x}/{y}/2/0_0.png',
     `Unexpected URL: ${url}`
   );
 });
 
 test('buildTileUrl with smooth option', () => {
-  const url = buildTileUrl('https://tilecache.rainviewer.com', 1700000000, 10, 5, 3, { color: 2, size: 256, smooth: 1, snow: 1 });
+  const url = buildTileUrl('https://tilecache.rainviewer.com', '/v2/radar/abc123', { color: 2, size: 256, smooth: 1, snow: 1 });
   assert(
-    url === 'https://tilecache.rainviewer.com/v2/radar/1700000000/256/10/5/3/2/1_1.png',
+    url === 'https://tilecache.rainviewer.com/v2/radar/abc123/256/{z}/{x}/{y}/2/1_1.png',
     `Unexpected URL: ${url}`
   );
 });
 
-test('selectFrames returns frames within 2h past + 30min future', () => {
+test('selectFrames returns frames within 3h past + 3h future', () => {
   const now = Math.floor(Date.now() / 1000);
   const past = [
-    now - 7200,  // 2h ago — should be included (boundary)
-    now - 5400,  // 1.5h ago
-    now - 3600,  // 1h ago
-    now - 1800,  // 30min ago
-    now - 600,   // 10min ago
+    { time: now - 10800, path: '/v2/radar/a' },
+    { time: now - 7200, path: '/v2/radar/b' },
+    { time: now - 3600, path: '/v2/radar/c' },
+    { time: now - 1800, path: '/v2/radar/d' },
+    { time: now - 600, path: '/v2/radar/e' },
   ];
   const future = [
-    now + 600,   // +10min
-    now + 1800,  // +30min — should be included (boundary)
+    { time: now + 600, path: '/v2/radar/f' },
+    { time: now + 10800, path: '/v2/radar/g' },
   ];
 
   const frames = selectFrames(past, future, now);
-  // All should be within range: 2h past to +30min future
-  for (const ts of frames) {
-    assert(ts >= now - 7200 && ts <= now + 1800, `Timestamp ${ts} out of range`);
+  for (const f of frames) {
+    assert(f.time >= now - 10800 && f.time <= now + 10800, `Timestamp ${f.time} out of range`);
   }
   assertArrayLen(frames, 7, `Expected 7 frames, got ${frames.length}`);
 });
@@ -42,12 +41,12 @@ test('selectFrames returns frames within 2h past + 30min future', () => {
 test('selectFrames filters out-of-range timestamps', () => {
   const now = Math.floor(Date.now() / 1000);
   const past = [
-    now - 10800, // 3h ago — should be excluded
-    now - 3600,  // 1h ago — included
+    { time: now - 14400, path: '/v2/radar/a' },
+    { time: now - 3600, path: '/v2/radar/b' },
   ];
   const future = [
-    now + 600,   // +10min — included
-    now + 3600,  // +1h — excluded
+    { time: now + 600, path: '/v2/radar/c' },
+    { time: now + 14400, path: '/v2/radar/d' },
   ];
 
   const frames = selectFrames(past, future, now);
@@ -61,11 +60,18 @@ test('selectFrames returns empty for empty inputs', () => {
 
 test('selectFrames returns sorted array', () => {
   const now = Math.floor(Date.now() / 1000);
-  const past = [now - 600, now - 3600, now - 1800];
-  const future = [now + 1200, now + 600];
+  const past = [
+    { time: now - 600, path: '/v2/radar/a' },
+    { time: now - 3600, path: '/v2/radar/b' },
+    { time: now - 1800, path: '/v2/radar/c' },
+  ];
+  const future = [
+    { time: now + 1200, path: '/v2/radar/d' },
+    { time: now + 600, path: '/v2/radar/e' },
+  ];
 
   const frames = selectFrames(past, future, now);
   for (let i = 1; i < frames.length; i++) {
-    assert(frames[i] >= frames[i - 1], `Not sorted at index ${i}: ${frames[i]} < ${frames[i-1]}`);
+    assert(frames[i].time >= frames[i - 1].time, `Not sorted at index ${i}: ${frames[i].time} < ${frames[i-1].time}`);
   }
 });

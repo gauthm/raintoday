@@ -28,32 +28,46 @@ test('mapValueToHeight uses logarithmic scale', () => {
   assert(hHigh > hLow, '20 > 0.5');
 });
 
+test('mapValueToHeight auto-scales with maxValue', () => {
+  // With maxValue=1, 0.5 should be much more visible than with maxValue=60
+  const hDefault = mapValueToHeight(0.5, 100);
+  const hAutoScaled = mapValueToHeight(0.5, 100, 1);
+  assert(hAutoScaled > hDefault, 'Auto-scaled 0.5 should be taller than default');
+  assert(hAutoScaled > 20, 'Auto-scaled 0.5 should be clearly visible (>20px)');
+});
+
+test('mapValueToHeight with maxValue makes low values readable', () => {
+  const h = mapValueToHeight(0.1, 80, 0.5);
+  assert(h > 10, `0.1 mm/h with max 0.5 should be > 10px, got ${h}`);
+});
+
 test('findNearestIndex finds exact match', () => {
   const data = [
-    { time: '2026-08-20T14:00', value: 0 },
-    { time: '2026-08-20T14:15', value: 0.5 },
-    { time: '2026-08-20T14:30', value: 1.0 },
+    { time: '2026-08-20T14:00Z', value: 0 },
+    { time: '2026-08-20T14:15Z', value: 0.5 },
+    { time: '2026-08-20T14:30Z', value: 1.0 },
   ];
-  const idx = findNearestIndex(data, new Date('2026-08-20T14:15'));
+  const idx = findNearestIndex(data, new Date('2026-08-20T14:15Z'));
   assertEq(idx, 1);
 });
 
 test('findNearestIndex finds nearest when no exact match', () => {
   const data = [
-    { time: '2026-08-20T14:00', value: 0 },
-    { time: '2026-08-20T14:15', value: 0.5 },
-    { time: '2026-08-20T14:30', value: 1.0 },
+    { time: '2026-08-20T14:00Z', value: 0 },
+    { time: '2026-08-20T14:15Z', value: 0.5 },
+    { time: '2026-08-20T14:30Z', value: 1.0 },
   ];
-  const idx = findNearestIndex(data, new Date('2026-08-20T14:05'));
+  const idx = findNearestIndex(data, new Date('2026-08-20T14:05Z'));
   assertEq(idx, 0); // 5min from 14:00, 10min from 14:15
 });
 
 test('findNearestIndex returns -1 for empty data', () => {
-  const idx = findNearestIndex([], new Date('2026-08-20T14:00'));
+  const idx = findNearestIndex([], new Date('2026-08-20T14:00Z'));
   assertEq(idx, -1);
 });
 
 test('formatTimeLabel formats as HH:MM', () => {
-  const label = formatTimeLabel('2026-08-20T14:30');
-  assert(label === '14:30', `Expected 14:30, got ${label}`);
+  const label = formatTimeLabel('2026-08-20T14:30Z');
+  // Time will be in local timezone, just check format
+  assert(label.length === 5 && label[2] === ':', `Expected HH:MM format, got ${label}`);
 });

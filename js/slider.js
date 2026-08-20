@@ -37,7 +37,7 @@ export function snapToInterval(time, interval) {
 
 /**
  * Find the index of the frame nearest to the target time.
- * @param {number[]} frames - Sorted array of timestamps
+ * @param {Array<{time: number}>} frames - Sorted array of frame objects
  * @param {number} targetTime - Target timestamp
  * @returns {number} Index or -1
  */
@@ -46,7 +46,7 @@ export function findNearestFrame(frames, targetTime) {
   let bestIdx = 0;
   let bestDiff = Infinity;
   for (let i = 0; i < frames.length; i++) {
-    const diff = Math.abs(frames[i] - targetTime);
+    const diff = Math.abs(frames[i].time - targetTime);
     if (diff < bestDiff) {
       bestDiff = diff;
       bestIdx = i;
@@ -67,20 +67,76 @@ export function clamp(val, min, max) {
 }
 
 /**
+ * Format a Unix timestamp (seconds) as HH:MM in local timezone.
+ * @param {number} ts - Unix timestamp in seconds
+ * @returns {string} Formatted time
+ */
+function formatTickTime(ts) {
+  const date = new Date(ts * 1000);
+  const h = String(date.getHours()).padStart(2, '0');
+  const m = String(date.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+/**
+ * Render tick marks with time labels under the slider.
+ * @param {HTMLElement} ticksEl - The #slider-ticks container
+ * @param {Array<{time: number}>} frames - Sorted frames
+ */
+function renderTicks(ticksEl, frames) {
+  ticksEl.innerHTML = '';
+
+  // Show every Nth frame as a tick to avoid crowding
+  const maxTicks = 7;
+  const step = Math.max(1, Math.ceil(frames.length / maxTicks));
+
+  for (let i = 0; i < frames.length; i += step) {
+    const pct = timeToPercent(frames[i].time, frames[0].time, frames[frames.length - 1].time);
+    const tick = document.createElement('div');
+    tick.className = 'slider-tick';
+    tick.style.left = `${pct}%`;
+
+    const label = document.createElement('span');
+    label.className = 'slider-tick-label';
+    label.textContent = formatTickTime(frames[i].time);
+    tick.appendChild(label);
+
+    ticksEl.appendChild(tick);
+  }
+
+  // Always show last frame
+  const lastIdx = frames.length - 1;
+  if (lastIdx % step !== 0) {
+    const pct = 100;
+    const tick = document.createElement('div');
+    tick.className = 'slider-tick';
+    tick.style.left = `${pct}%`;
+
+    const label = document.createElement('span');
+    label.className = 'slider-tick-label';
+    label.textContent = formatTickTime(frames[lastIdx].time);
+    tick.appendChild(label);
+
+    ticksEl.appendChild(tick);
+  }
+}
+
+/**
  * Initialize the time slider with drag and play/pause.
  * @param {object} options - { frames, onTimeChange, onPlayStateChange }
- *   frames: number[] (sorted timestamps in seconds)
+ *   frames: Array<{time: number, path: string}> (sorted by time)
  *   onTimeChange: (frameIndex) => void
  *   onPlayStateChange: (isPlaying) => void
  * @returns {object} { setFrame, play, pause, destroy }
  */
 export function initSlider(options) {
-  const { frames, onTimeChange, onPlayStateChange } = options;
+  const { frames, onTimeChange, onPlayStateChange, onDragEnd } = options;
 
   const track = document.getElementById('slider-track');
   const fill = document.getElementById('slider-fill');
   const handle = document.getElementById('slider-handle');
   const playBtn = document.getElementById('play-btn');
+  const ticksEl = document.getElementById('slider-ticks');
 
   let currentIdx = 0;
   let isPlaying = false;
@@ -90,12 +146,15 @@ export function initSlider(options) {
     return { setFrame: () => {}, play: () => {}, pause: () => {}, destroy: () => {} };
   }
 
-  const startTime = frames[0];
-  const endTime = frames[frames.length - 1];
+  const startTime = frames[0].time;
+  const endTime = frames[frames.length - 1].time;
   const interval = 600; // 10min snap
 
+  // Render tick marks with time labels
+  renderTicks(ticksEl, frames);
+
   function updateUI() {
-    const pct = timeToPercent(frames[currentIdx], startTime, endTime);
+    const pct = timeToPercent(frames[currentIdx].time, startTime, endTime);
     fill.style.width = `${pct}%`;
     handle.style.left = `${pct}%`;
   }
@@ -149,6 +208,7 @@ export function initSlider(options) {
     document.removeEventListener('mouseup', onPointerUp);
     document.removeEventListener('touchmove', onPointerMove);
     document.removeEventListener('touchend', onPointerUp);
+    if (onDragEnd) onDragEnd(currentIdx);
   }
 
   function onPointerDown(e) {
@@ -211,6 +271,7 @@ export function initSlider(options) {
     setFrame,
     play,
     pause,
+    isPlaying: () => isPlaying,
     destroy: () => {
       pause();
       track.removeEventListener('mousedown', onPointerDown);

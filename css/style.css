@@ -5,13 +5,13 @@
 }
 
 :root {
-  --bg: #0a0a14;
-  --overlay-bg: rgba(15, 15, 30, 0.9);
-  --border: rgba(255, 255, 255, 0.1);
+  --bg: #f0f0f4;
+  --overlay-bg: rgba(255, 255, 255, 0.92);
+  --border: rgba(0, 0, 0, 0.12);
   --accent: #0066ff;
   --accent-light: #4acaea;
-  --text: #ffffff;
-  --text-dim: #888888;
+  --text: #1a1a2e;
+  --text-dim: #666666;
   --font: system-ui, -apple-system, sans-serif;
 }
 
@@ -39,7 +39,7 @@ html, body {
 }
 
 .leaflet-container {
-  background: #0d1117;
+  background: #e8e8ed;
 }
 
 /* Search overlay */
@@ -94,7 +94,7 @@ html, body {
 }
 
 .search-result-item:hover {
-  background: rgba(0, 102, 255, 0.2);
+  background: rgba(0, 102, 255, 0.12);
 }
 
 /* Geolocation button */
@@ -116,14 +116,14 @@ html, body {
 }
 
 #geoloc-btn:hover {
-  background: rgba(0, 102, 255, 0.3);
+  background: rgba(0, 102, 255, 0.18);
 }
 
 /* Legend */
 #legend {
   position: absolute;
   top: 60px;
-  left: 12px;
+  right: 12px;
   z-index: 1000;
   border-radius: 8px;
   padding: 8px 10px;
@@ -176,7 +176,7 @@ html, body {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(10, 10, 20, 0.95);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
@@ -204,24 +204,42 @@ html, body {
 }
 
 #play-btn {
-  background: rgba(0, 102, 255, 0.2);
-  border: 1px solid rgba(0, 102, 255, 0.4);
+  background: rgba(0, 102, 255, 0.12);
+  border: 1px solid rgba(0, 102, 255, 0.3);
   border-radius: 6px;
   padding: 4px 12px;
-  color: #4a9aff;
+  color: var(--accent);
   font-size: 12px;
   font-family: var(--font);
   cursor: pointer;
 }
 
 #play-btn:hover {
-  background: rgba(0, 102, 255, 0.35);
+  background: rgba(0, 102, 255, 0.22);
+}
+
+#now-btn {
+  background: rgba(0, 102, 255, 0.08);
+  border: 1px solid rgba(0, 102, 255, 0.2);
+  border-radius: 6px;
+  padding: 4px 12px;
+  color: var(--accent);
+  font-size: 12px;
+  font-family: var(--font);
+  cursor: pointer;
+  margin-left: 6px;
+}
+
+#now-btn:hover {
+  background: rgba(0, 102, 255, 0.18);
 }
 
 #graph-canvas {
   width: 100%;
-  height: 50px;
+  max-width: 600px;
+  height: 40px;
   display: block;
+  margin: 0 auto;
 }
 
 #time-labels {
@@ -229,19 +247,31 @@ html, body {
   justify-content: space-between;
   font-size: 10px;
   color: var(--text-dim);
-  margin-bottom: 10px;
+  margin-bottom: 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  visibility: hidden;
 }
 
 /* Slider */
 #slider-container {
   padding: 0 4px;
+  display: flex;
+  justify-content: center;
+}
+
+#slider-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
 }
 
 #slider-track {
   position: relative;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
   cursor: pointer;
 }
 
@@ -263,7 +293,7 @@ html, body {
   height: 16px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   border: 2px solid var(--accent);
   cursor: grab;
   pointer-events: none;
@@ -271,6 +301,35 @@ html, body {
 
 #slider-handle.dragging {
   cursor: grabbing;
+}
+
+/* Slider tick marks */
+#slider-ticks {
+  position: relative;
+  height: 20px;
+  margin-top: 2px;
+}
+
+.slider-tick {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.slider-tick::before {
+  content: '';
+  width: 1px;
+  height: 5px;
+  background: var(--text-dim);
+}
+
+.slider-tick-label {
+  font-size: 9px;
+  color: var(--text-dim);
+  white-space: nowrap;
 }
 
 /* Leaflet marker override */
@@ -290,11 +349,16 @@ html, body {
   }
 
   #legend {
-    display: none;
+    top: 52px;
+    right: 8px;
   }
 
   #bottom-panel {
     padding: 10px 12px 8px;
+  }
+
+  #slider-wrapper {
+    max-width: 100%;
   }
 }
 
@@ -304,9 +368,9 @@ html, body {
   margin-right: 10px !important;
 }
 
-/* Leaflet dark theme overrides */
+/* Leaflet light theme overrides */
 .leaflet-control-attribution {
-  background: rgba(15, 15, 30, 0.8) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
   color: #666 !important;
 }
 
@@ -315,11 +379,11 @@ html, body {
 }
 
 .leaflet-bar a {
-  background: rgba(15, 15, 30, 0.9) !important;
-  color: #fff !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #333 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
 }
 
 .leaflet-bar a:hover {
-  background: rgba(0, 102, 255, 0.3) !important;
+  background: rgba(0, 102, 255, 0.15) !important;
 }
