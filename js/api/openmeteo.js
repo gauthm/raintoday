@@ -45,7 +45,7 @@ export async function fetchPrecipitation(lat, lon) {
 /**
  * Search for places using Open-Meteo geocoding.
  * @param {string} query - Search query
- * @returns {Promise<Array<{name: string, lat: number, lon: number, country: string}>>}
+ * @returns {Promise<Array<{name: string, lat: number, lon: number, country: string, admin1: string}>>}
  */
 export async function searchPlaces(query) {
   const url = buildGeocodingUrl(query);
