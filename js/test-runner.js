@@ -60,6 +60,7 @@ import './test-rainviewer.js';
 import './test-openmeteo.js';
 import './test-graph.js';
 import './test-slider.js';
+import './test-geolocation.js';
 
 // Auto-run on load
 window.addEventListener('DOMContentLoaded', () => {
