@@ -49,7 +49,7 @@ test('findNearestFrame returns closest frame index', () => {
   assertEq(idx, 2); // closest to 1700001200
 });
 
-test('findNearestFrame returns 0 for empty array', () => {
+test('findNearestFrame returns -1 for empty array', () => {
   const idx = findNearestFrame([], 1700001000);
   assertEq(idx, -1);
 });
