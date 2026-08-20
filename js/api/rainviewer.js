@@ -6,14 +6,37 @@
 const RAINVIEWER_API = 'https://api.rainviewer.com/public/weather-maps.json';
 
 /**
+ * Fetch with timeout and single retry.
+ * @param {string} url - URL to fetch
+ * @param {number} timeout - Timeout in ms
+ * @param {number} retries - Number of retries
+ * @returns {Promise<Response>}
+ */
+async function fetchWithRetry(url, timeout = 5000, retries = 1) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res;
+    } catch (e) {
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 3000));
+        continue;
+      }
+      throw e;
+    }
+  }
+}
+
+/**
  * Fetch available radar frames from RainViewer.
  * @returns {Promise<{host: string, past: number[], future: number[]}>}
  */
 export async function fetchRadarFrames() {
-  const res = await fetch(RAINVIEWER_API);
-  if (!res.ok) {
-    throw new Error(`RainViewer API error: ${res.status}`);
-  }
+  const res = await fetchWithRetry(RAINVIEWER_API);
   const data = await res.json();
   const host = data.host;
   const past = (data.radar && data.radar.past) ? data.radar.past.map(f => f.time) : [];

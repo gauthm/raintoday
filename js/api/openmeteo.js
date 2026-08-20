@@ -7,6 +7,32 @@ const OPEN_METEO_FORECAST = 'https://api.open-meteo.com/v1/forecast';
 const OPEN_METEO_GEOCODING = 'https://geocoding-api.open-meteo.com/v1/search';
 
 /**
+ * Fetch with timeout and single retry.
+ * @param {string} url - URL to fetch
+ * @param {number} timeout - Timeout in ms
+ * @param {number} retries - Number of retries
+ * @returns {Promise<Response>}
+ */
+async function fetchWithRetry(url, timeout = 5000, retries = 1) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res;
+    } catch (e) {
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 3000));
+        continue;
+      }
+      throw e;
+    }
+  }
+}
+
+/**
  * Build the Open-Meteo forecast API URL for precipitation.
  * @param {number} lat - Latitude
  * @param {number} lon - Longitude
@@ -34,10 +60,7 @@ export function buildGeocodingUrl(query, count = 5) {
  */
 export async function fetchPrecipitation(lat, lon) {
   const url = buildPrecipitationUrl(lat, lon);
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Open-Meteo API error: ${res.status}`);
-  }
+  const res = await fetchWithRetry(url);
   const data = await res.json();
   return parsePrecipitation(data);
 }
@@ -49,10 +72,7 @@ export async function fetchPrecipitation(lat, lon) {
  */
 export async function searchPlaces(query) {
   const url = buildGeocodingUrl(query);
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Geocoding API error: ${res.status}`);
-  }
+  const res = await fetchWithRetry(url);
   const data = await res.json();
   if (!data.results) return [];
   return data.results.map(r => ({
