@@ -14,6 +14,8 @@ export function initMap(lat, lon) {
     attributionControl: true,
     minZoom: 3,
     maxZoom: 19,
+    maxBounds: [[-90, -180], [90, 180]],
+    maxBoundsViscosity: 1.0,
   }).setView([lat, lon], 9);
 
   // Base layer (OpenStreetMap — no watermark)
