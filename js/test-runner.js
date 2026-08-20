@@ -57,6 +57,7 @@ async function runTests() {
 
 // Import test files (they register via test())
 import './test-rainviewer.js';
+import './test-openmeteo.js';
 
 // Auto-run on load
 window.addEventListener('DOMContentLoaded', () => {
