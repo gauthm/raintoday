@@ -3,7 +3,7 @@
  */
 import { fetchRadarFrames, selectFrames } from './api/rainviewer.js';
 import { fetchPrecipitation, extractWindow, reverseGeocode } from './api/openmeteo.js';
-import { initMap, setRadarLayer, setRadarOffset, setMarker, centerMap, clearRadarLayer, showRadarUnavailable } from './map.js';
+import { initMap, setRadarLayer, setRadarOffset, setMarker, centerMap, clearRadarLayer, showRadarUnavailable, recheckRadarCoverage } from './map.js';
 import { renderGraph, renderTimeLabels, findNearestIndex } from './graph.js';
 import { initSlider } from './slider.js';
 import { getUserLocationWithFallback } from './geolocation.js';
@@ -365,9 +365,15 @@ async function init() {
   // Load initial location data
   await loadLocation(location.lat, location.lon);
 
-  // Recompute radar offset on zoom change (pixel-per-km changes)
+  // Recompute radar offset on zoom change + recheck coverage
   map.on('zoomend', () => {
     updateRadar(currentIdx);
+    recheckRadarCoverage(map);
+  });
+
+  // Recheck coverage when user pans
+  map.on('moveend', () => {
+    recheckRadarCoverage(map);
   });
 
   // Handle window resize for graph

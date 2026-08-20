@@ -39,6 +39,33 @@ export function initMap(lat, lon) {
  */
 let currentRadarLayer = null;
 let previousRadarLayer = null;
+let tileLoadCount = 0;
+let tileErrorCount = 0;
+let coverageCheckTimer = null;
+let coverageMap = null;
+
+function checkRadarCoverage(map) {
+  if (coverageCheckTimer) clearTimeout(coverageCheckTimer);
+  coverageCheckTimer = setTimeout(() => {
+    const total = tileLoadCount + tileErrorCount;
+    if (total > 0 && tileErrorCount >= total * 0.8) {
+      showRadarUnavailable(map, true);
+    } else if (tileLoadCount > 0) {
+      showRadarUnavailable(map, false);
+    }
+  }, 1500);
+}
+
+/**
+ * Force a coverage recheck after map move/zoom.
+ * @param {object} map - Leaflet map instance
+ */
+export function recheckRadarCoverage(map) {
+  if (!currentRadarLayer) return;
+  tileLoadCount = 0;
+  tileErrorCount = 0;
+  checkRadarCoverage(map);
+}
 
 export function setRadarLayer(map, host, path, options = {}) {
   const color = options.color ?? 2;
@@ -58,6 +85,10 @@ export function setRadarLayer(map, host, path, options = {}) {
   // Move current to previous, create new layer on top
   previousRadarLayer = currentRadarLayer;
 
+  // Reset tile counters for coverage check
+  tileLoadCount = 0;
+  tileErrorCount = 0;
+
   currentRadarLayer = L.tileLayer(tileUrl, {
     opacity: opacity,
     zIndex: 200,
@@ -66,8 +97,16 @@ export function setRadarLayer(map, host, path, options = {}) {
     detectRetina: false,
   }).addTo(map);
 
-  currentRadarLayer.on('tileerror', (e) => {
-    console.warn('Radar tile error:', e.tile.src);
+  coverageMap = map;
+
+  currentRadarLayer.on('tileerror', () => {
+    tileErrorCount++;
+    checkRadarCoverage(map);
+  });
+
+  currentRadarLayer.on('tileload', () => {
+    tileLoadCount++;
+    checkRadarCoverage(map);
   });
 
   // Remove previous layer once new one has loaded its first tile
@@ -113,6 +152,10 @@ export function setRadarOffset(map, dx = 0, dy = 0) {
  * @param {object} map - Leaflet map instance
  */
 export function clearRadarLayer(map) {
+  if (coverageCheckTimer) {
+    clearTimeout(coverageCheckTimer);
+    coverageCheckTimer = null;
+  }
   if (previousRadarLayer) {
     map.removeLayer(previousRadarLayer);
     previousRadarLayer = null;
@@ -174,7 +217,7 @@ export function showRadarUnavailable(map, show) {
     radarBadge.onAdd = function () {
       const div = L.DomUtil.create('div', 'radar-badge');
       div.style.cssText = 'background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);border:1px solid rgba(255,80,80,0.4);border-radius:8px;padding:6px 12px;font-size:12px;color:#cc0000;margin-top:50px;margin-right:10px;';
-      div.textContent = 'Radar indisponible';
+      div.textContent = 'Radar non disponible dans cette région';
       return div;
     };
     radarBadge.addTo(map);
