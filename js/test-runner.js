@@ -59,6 +59,7 @@ async function runTests() {
 import './test-rainviewer.js';
 import './test-openmeteo.js';
 import './test-graph.js';
+import './test-slider.js';
 
 // Auto-run on load
 window.addEventListener('DOMContentLoaded', () => {
