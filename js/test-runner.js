@@ -37,10 +37,16 @@ async function runTests() {
   for (const t of tests) {
     try {
       await t.fn();
-      resultsEl.innerHTML += `<div class="pass">✓ ${t.name}</div>`;
+      const div = document.createElement('div');
+      div.className = 'pass';
+      div.textContent = `✓ ${t.name}`;
+      resultsEl.appendChild(div);
       passed++;
     } catch (e) {
-      resultsEl.innerHTML += `<div class="fail">✗ ${t.name}: ${e.message}</div>`;
+      const div = document.createElement('div');
+      div.className = 'fail';
+      div.textContent = `✗ ${t.name}: ${e.message}`;
+      resultsEl.appendChild(div);
       failed++;
     }
   }

@@ -13,15 +13,15 @@
 
   <!-- Top overlay: search -->
   <div id="search-container">
-    <input type="text" id="search-input" placeholder="Rechercher un lieu..." autocomplete="off" />
-    <div id="search-results"></div>
+    <input type="text" id="search-input" class="glass-overlay" placeholder="Rechercher un lieu..." aria-label="Rechercher un lieu" autocomplete="off" />
+    <div id="search-results" class="glass-overlay"></div>
   </div>
 
   <!-- Top right: geolocation button -->
-  <button id="geoloc-btn" title="Ma position">📍</button>
+  <button id="geoloc-btn" class="glass-overlay" title="Ma position" aria-label="Ma position">📍</button>
 
   <!-- Left overlay: color legend -->
-  <div id="legend">
+  <div id="legend" class="glass-overlay">
     <div class="legend-title">mm/h</div>
     <div class="legend-bar">
       <div style="background:#1a3a5a" title="0"></div>
@@ -36,7 +36,7 @@
   </div>
 
   <!-- Toast notifications -->
-  <div id="toast"></div>
+  <div id="toast" class="glass-overlay"></div>
 
   <!-- Bottom panel: graph + slider + controls -->
   <div id="bottom-panel">
