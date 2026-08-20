@@ -12,6 +12,8 @@ export function initMap(lat, lon) {
   const map = L.map('map', {
     zoomControl: true,
     attributionControl: true,
+    minZoom: 3,
+    maxZoom: 19,
   }).setView([lat, lon], 9);
 
   // Base layer (OpenStreetMap — no watermark)
