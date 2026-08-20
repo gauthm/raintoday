@@ -297,3 +297,29 @@ html, body {
     padding: 10px 12px 8px;
   }
 }
+
+/* Radar unavailable badge */
+.leaflet-control.radar-badge {
+  margin-top: 50px !important;
+  margin-right: 10px !important;
+}
+
+/* Leaflet dark theme overrides */
+.leaflet-control-attribution {
+  background: rgba(15, 15, 30, 0.8) !important;
+  color: #666 !important;
+}
+
+.leaflet-control-attribution a {
+  color: #888 !important;
+}
+
+.leaflet-bar a {
+  background: rgba(15, 15, 30, 0.9) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.leaflet-bar a:hover {
+  background: rgba(0, 102, 255, 0.3) !important;
+}
