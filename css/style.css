@@ -268,7 +268,7 @@ html, body {
 
 /* Slider */
 #slider-container {
-  padding: 0 4px;
+  padding: 0;
   display: flex;
   justify-content: center;
 }
