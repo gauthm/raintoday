@@ -100,6 +100,9 @@ export function renderGraph(canvas, data, currentIndex) {
 
   for (let i = 0; i < barCount; i++) {
     const value = data[i].value;
+
+    if (value <= 0) continue;
+
     const height = mapValueToHeight(value, maxHeight, maxValue);
     const usableWidth = cssWidth - barWidth;
     const centerX = barCount > 1
@@ -107,25 +110,19 @@ export function renderGraph(canvas, data, currentIndex) {
       : cssWidth / 2;
     const x = centerX - barWidth / 2;
     const y = cssHeight - height;
-
     const color = colorForPrecipitation(value);
 
+    ctx.globalAlpha = i === currentIndex ? 1.0 : (i < nowIdx ? 0.5 : 0.7);
+    ctx.fillStyle = color;
+
     if (i === currentIndex) {
-      // Current bar: full opacity + glow
       ctx.shadowColor = color;
       ctx.shadowBlur = 8;
-      ctx.fillStyle = color;
-      ctx.globalAlpha = 1.0;
-      ctx.fillRect(x, y, barWidth, height);
-      ctx.shadowBlur = 0;
-    } else {
-      // Past bars: 0.5 opacity, future bars: 0.7 opacity
-      ctx.globalAlpha = i < nowIdx ? 0.5 : 0.7;
-      ctx.fillStyle = color;
-      ctx.fillRect(x, y, barWidth, height);
     }
-  }
 
+    ctx.fillRect(x, y, barWidth, height);
+    ctx.shadowBlur = 0;
+  }
   ctx.globalAlpha = 1.0;
 }
 
