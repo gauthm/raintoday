@@ -89,7 +89,6 @@ export function renderGraph(canvas, data, currentIndex) {
   const barCount = data.length;
   const maxHeight = cssHeight - 8;
 
-  // Bar width: distance between two slider positions, minus gap
   // Slider maps index i to (i / (barCount - 1)) * cssWidth
   const slotWidth = barCount > 1 ? cssWidth / (barCount - 1) : cssWidth;
   const gap = 2;
@@ -102,9 +101,9 @@ export function renderGraph(canvas, data, currentIndex) {
   for (let i = 0; i < barCount; i++) {
     const value = data[i].value;
     const height = mapValueToHeight(value, maxHeight, maxValue);
-    // Center bar on slider position: (i / (barCount - 1)) * cssWidth
+    // Center bar on slider position, clamp so it doesn't clip at edges
     const centerX = barCount > 1 ? (i / (barCount - 1)) * cssWidth : cssWidth / 2;
-    const x = centerX - barWidth / 2;
+    const x = Math.max(0, Math.min(cssWidth - barWidth, centerX - barWidth / 2));
     const y = cssHeight - height;
 
     const color = colorForPrecipitation(value);
