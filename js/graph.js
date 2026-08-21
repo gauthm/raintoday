@@ -83,8 +83,11 @@ export function renderGraph(canvas, data, currentIndex) {
 
   const barCount = data.length;
   const gap = 2;
-  const barWidth = Math.max(1, (cssWidth - gap * (barCount - 1)) / barCount);
+  const totalGapWidth = gap * (barCount - 1);
+  const totalBarWidth = cssWidth - totalGapWidth;
+  const barWidth = Math.max(1, totalBarWidth / barCount);
   const maxHeight = cssHeight - 4;
+  const stepWidth = barWidth + gap;
 
   // Find "now" index (the frame closest to current time)
   const now = new Date();
@@ -93,7 +96,7 @@ export function renderGraph(canvas, data, currentIndex) {
   for (let i = 0; i < barCount; i++) {
     const value = data[i].value;
     const height = mapValueToHeight(value, maxHeight, maxValue);
-    const x = i * (barWidth + gap);
+    const x = i * stepWidth;
     const y = cssHeight - height;
 
     const color = colorForPrecipitation(value);
@@ -107,9 +110,11 @@ export function renderGraph(canvas, data, currentIndex) {
       ctx.fillRect(x, y, barWidth, height);
       ctx.shadowBlur = 0;
 
-      // Triangle marker above current bar
-      ctx.fillStyle = '#4acaea';
-      const triX = x + barWidth / 2;
+      // Triangle marker — aligned with slider handle position
+      // Slider maps index i to: (i / (barCount - 1)) * cssWidth
+      const triX = barCount > 1
+        ? (i / (barCount - 1)) * cssWidth
+        : cssWidth / 2;
       const triY = y - 6;
       ctx.beginPath();
       ctx.moveTo(triX, triY + 5);
