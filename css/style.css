@@ -246,8 +246,6 @@ html, body {
   border-radius: 4px;
   overflow: visible;
   cursor: pointer;
-  box-shadow: -8px 0 0 rgba(0, 0, 0, 0.10),
-               8px 0 0 rgba(0, 0, 0, 0.10);
 }
 
 /* Fill : ENFANT de slider-track, position absolute */
