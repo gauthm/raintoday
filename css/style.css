@@ -299,18 +299,30 @@ html, body {
   align-items: center;
   gap: 2px;
 }
-
 .slider-tick::before {
   content: '';
   width: 1px;
-  height: 4px;
-  background: rgba(0, 0, 0, 0.18);
+  height: 5px;
+  background: rgba(0, 0, 0, 0.22);
 }
-
 .slider-tick-label {
   font-size: 9px;
   color: #999;
   white-space: nowrap;
+  letter-spacing: 0.1px;
+}
+
+.slider-tick-minor {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.slider-tick-minor::before {
+  content: '';
+  width: 1px;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.10);
 }
 
 /* ═══════════════════════════════════════

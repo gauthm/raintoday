@@ -89,33 +89,29 @@ function renderTicks(ticksEl, frames) {
   const total = frames.length;
   if (total === 0) return;
 
-  const indices = new Set();
-  indices.add(0);
-  indices.add(Math.floor(total / 2));
-  indices.add(total - 1);
-
-  const step = Math.max(1, Math.ceil(total / 6));
-  for (let i = 0; i < total; i += step) indices.add(i);
-
-  const sorted = [...indices].sort((a, b) => a - b);
-
-  sorted.forEach(i => {
+  for (let i = 0; i < total; i++) {
     const pct = timeToPercent(frames[i].time, frames[0].time, frames[total - 1].time);
+    const date = new Date(frames[i].time * 1000);
+    const minutes = date.getMinutes();
+    const isLabel = (minutes % 30 === 0);
 
     const tick = document.createElement('div');
-    tick.className = 'slider-tick';
+    tick.className = isLabel ? 'slider-tick' : 'slider-tick-minor';
     tick.style.left = pct + '%';
 
-    if (pct < 4)       tick.style.transform = 'translateX(0%)';
-    else if (pct > 96) tick.style.transform = 'translateX(-100%)';
+    if      (pct < 2)  tick.style.transform = 'translateX(0%)';
+    else if (pct > 98) tick.style.transform = 'translateX(-100%)';
     else               tick.style.transform = 'translateX(-50%)';
 
-    const label = document.createElement('span');
-    label.className = 'slider-tick-label';
-    label.textContent = formatTickTime(frames[i].time);
-    tick.appendChild(label);
+    if (isLabel) {
+      const label = document.createElement('span');
+      label.className = 'slider-tick-label';
+      label.textContent = formatTickTime(frames[i].time);
+      tick.appendChild(label);
+    }
+
     ticksEl.appendChild(tick);
-  });
+  }
 }
 
 /**
