@@ -154,10 +154,13 @@ export function initSlider(options) {
     const trackWidth = track.offsetWidth;
     if (trackWidth === 0) { requestAnimationFrame(updateUI); return; }
 
-    const pct = timeToPercent(frames[currentIdx].time, startTime, endTime);
+    const HANDLE_RADIUS = 8;
+    const pct = timeToPercent(frames[currentIdx].time, startTime, endTime) / 100;
 
-    fill.style.width = pct + '%';
-    handle.style.left = pct + '%';
+    const centerX = HANDLE_RADIUS + pct * (trackWidth - 2 * HANDLE_RADIUS);
+
+    fill.style.width = centerX + 'px';
+    handle.style.left = centerX + 'px';
     handle.style.transform = 'translate(-50%, -50%)';
   }
 
@@ -173,15 +176,17 @@ export function initSlider(options) {
 
   function percentFromMouseEvent(e) {
     const rect = track.getBoundingClientRect();
+    const HANDLE_RADIUS = 8;
     const x = e.clientX - rect.left;
-    const pct = (x / rect.width) * 100;
+    const pct = ((x - HANDLE_RADIUS) / (rect.width - 2 * HANDLE_RADIUS)) * 100;
     return clamp(pct, 0, 100);
   }
 
   function percentFromTouchEvent(e) {
     const rect = track.getBoundingClientRect();
+    const HANDLE_RADIUS = 8;
     const x = e.touches[0].clientX - rect.left;
-    const pct = (x / rect.width) * 100;
+    const pct = ((x - HANDLE_RADIUS) / (rect.width - 2 * HANDLE_RADIUS)) * 100;
     return clamp(pct, 0, 100);
   }
 
