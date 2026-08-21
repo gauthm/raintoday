@@ -10,6 +10,7 @@ import { getUserLocationWithFallback } from './geolocation.js';
 import { initSearch } from './search.js';
 import { t } from './i18n.js';
 import { sampleRadarAtLocation } from './radar-sampler.js';
+import { computeRadarMotion } from './radar-motion.js';
 
 // State
 let map = null;
@@ -19,6 +20,7 @@ let windData = { speed: 0, direction: 0 };
 let userLat = 48.85;
 let userLon = 2.35;
 let currentDeltaSec = 0;
+let motionData = null;
 let sliderApi = null;
 let currentIdx = 0;
 let lastRadarFrameTime = null;
@@ -130,29 +132,61 @@ function updateTimeInfo(idx) {
 let lastRadarPath = null;
 
 /**
+ * Compute actual precipitation motion by comparing the last 2 past radar frames.
+ * Populates motionData. Falls back to windData if CORS blocks or no rain.
+ */
+async function computeMotionFromRadar() {
+  motionData = null;
+  if (!radarData || radarData.frames.length < 2) return;
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const pastFrames = radarData.frames.filter(f => f.time <= nowSec);
+  if (pastFrames.length < 2) return;
+
+  const fOld = pastFrames[pastFrames.length - 2];
+  const fNew = pastFrames[pastFrames.length - 1];
+  const timeDelta = fNew.time - fOld.time;
+  if (timeDelta <= 0) return;
+
+  try {
+    motionData = await computeRadarMotion(
+      radarData.host, fOld.path, fNew.path, timeDelta, userLat, userLon
+    );
+  } catch (e) {
+    console.warn('[motion] optical flow error:', e);
+  }
+
+  if (!motionData) {
+    console.log('[motion] falling back to wind data');
+  }
+}
+
+/**
  * Compute pixel offset for future radar extrapolation.
- * Wind direction = where wind comes FROM, so clouds move in opposite direction.
+ * Uses optical flow (motionData) if available, falls back to wind 850hPa.
  * @param {number} deltaSec - Time delta in seconds (positive = future)
  * @param {number} zoom - Current map zoom level
  * @returns {{dx: number, dy: number}} Pixel offset
  */
 function computeRadarOffset(deltaSec, zoom) {
-  if (deltaSec <= 0 || windData.speed === 0) return { dx: 0, dy: 0 };
+  if (deltaSec <= 0) return { dx: 0, dy: 0 };
 
-  // Wind speed in km/h, time in hours
-  const distKm = windData.speed * (deltaSec / 3600);
+  let speedKmh, directionDeg;
+  if (motionData) {
+    speedKmh = motionData.speedKmh;
+    directionDeg = motionData.directionDeg;
+  } else {
+    if (windData.speed === 0) return { dx: 0, dy: 0 };
+    speedKmh = windData.speed;
+    directionDeg = (windData.direction + 180) % 360;
+  }
 
-  // Pixels per km at current zoom: 256 * 2^zoom / 40075 (Earth circumference km)
+  const distKm = speedKmh * (deltaSec / 3600);
   const latRad = (userLat * Math.PI) / 180;
   const pxPerKm = (256 * Math.pow(2, zoom)) / (40075 * Math.cos(latRad));
   const distPx = distKm * pxPerKm;
+  const rad = (directionDeg * Math.PI) / 180;
 
-  // Wind direction = where wind comes FROM (degrees clockwise from North)
-  // Clouds move TO the opposite direction
-  const moveDir = (windData.direction + 180) % 360;
-  const rad = (moveDir * Math.PI) / 180;
-
-  // dx = east, dy = south (screen y increases downward)
   const dx = distPx * Math.sin(rad);
   const dy = -distPx * Math.cos(rad);
 
@@ -166,13 +200,24 @@ function computeRadarOffset(deltaSec, zoom) {
  * @returns {{dLat: number, dLon: number}}
  */
 function computeLatLngOffset(deltaSec) {
-  if (deltaSec <= 0 || windData.speed === 0) return { dLat: 0, dLon: 0 };
-  const distKm = windData.speed * (deltaSec / 3600);
-  const moveDir = (windData.direction + 180) % 360;
-  const rad = (moveDir * Math.PI) / 180;
-  const dLat = (distKm * Math.cos(rad)) / 111;
-  const dLon = (distKm * Math.sin(rad)) / (111 * Math.cos(userLat * Math.PI / 180));
-  return { dLat, dLon };
+  if (deltaSec <= 0) return { dLat: 0, dLon: 0 };
+
+  let speedKmh, directionDeg;
+  if (motionData) {
+    speedKmh = motionData.speedKmh;
+    directionDeg = motionData.directionDeg;
+  } else {
+    if (windData.speed === 0) return { dLat: 0, dLon: 0 };
+    speedKmh = windData.speed;
+    directionDeg = (windData.direction + 180) % 360;
+  }
+
+  const distKm = speedKmh * (deltaSec / 3600);
+  const rad = (directionDeg * Math.PI) / 180;
+  return {
+    dLat: (distKm * Math.cos(rad)) / 111,
+    dLon: (distKm * Math.sin(rad)) / (111 * Math.cos(userLat * Math.PI / 180)),
+  };
 }
 
 /**
@@ -376,6 +421,8 @@ async function loadLocation(lat, lon) {
     loadRadar(),
     loadPrecipitation(lat, lon),
   ]);
+
+  await computeMotionFromRadar();
 
   if (precipData.length > 0) {
     setupSlider();
