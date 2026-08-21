@@ -97,22 +97,34 @@ function updateTimeInfo(idx) {
 
   renderPrecipText(precipEl, entry.value, entry.probability, date);
 
-  if (radarData) {
-    const ts = Math.floor(date.getTime() / 1000);
-    const lastFrame = radarData.frames[radarData.frames.length - 1];
-    const frameToSample = ts > lastFrame.time
-      ? lastFrame
-      : findNearestRadarFrame(ts);
+  if (!radarData) return;
 
-    if (frameToSample) {
-      sampleRadarAtLocation(radarData.host, frameToSample.path, userLat, userLon)
-        .then(mmh => {
-          if (mmh !== null && idx === currentIdx) {
-            renderPrecipText(precipEl, mmh, entry.probability, date);
-          }
-        });
-    }
+  const ts = Math.floor(date.getTime() / 1000);
+  const lastFrame = radarData.frames[radarData.frames.length - 1];
+  const isFuture = ts > lastFrame.time;
+
+  let sampleLat = userLat;
+  let sampleLon = userLon;
+  let frameToSample;
+
+  if (isFuture) {
+    const deltaSec = ts - lastFrame.time;
+    const { dLat, dLon } = computeLatLngOffset(deltaSec);
+    sampleLat = userLat - dLat;
+    sampleLon = userLon - dLon;
+    frameToSample = lastFrame;
+  } else {
+    frameToSample = findNearestRadarFrame(ts);
   }
+
+  if (!frameToSample) return;
+
+  sampleRadarAtLocation(radarData.host, frameToSample.path, sampleLat, sampleLon)
+    .then(mmh => {
+      if (mmh !== null && idx === currentIdx) {
+        renderPrecipText(precipEl, mmh, entry.probability, date);
+      }
+    });
 }
 
 let lastRadarPath = null;
@@ -145,6 +157,22 @@ function computeRadarOffset(deltaSec, zoom) {
   const dy = -distPx * Math.cos(rad);
 
   return { dx, dy };
+}
+
+/**
+ * Compute geographic displacement (dLat, dLon) of precipitation for a given time delta.
+ * Used to back-project sample position on radar for future frames.
+ * @param {number} deltaSec - Seconds into the future
+ * @returns {{dLat: number, dLon: number}}
+ */
+function computeLatLngOffset(deltaSec) {
+  if (deltaSec <= 0 || windData.speed === 0) return { dLat: 0, dLon: 0 };
+  const distKm = windData.speed * (deltaSec / 3600);
+  const moveDir = (windData.direction + 180) % 360;
+  const rad = (moveDir * Math.PI) / 180;
+  const dLat = (distKm * Math.cos(rad)) / 111;
+  const dLon = (distKm * Math.sin(rad)) / (111 * Math.cos(userLat * Math.PI / 180));
+  return { dLat, dLon };
 }
 
 /**
@@ -438,13 +466,7 @@ async function init() {
   map.on('zoomanim', (e) => {
     if (currentDeltaSec <= 0) return;
     const { dx, dy } = computeRadarOffset(currentDeltaSec, e.zoom);
-    setRadarOffset(map, dx, dy);
-  });
-
-  map.on('zoom', () => {
-    if (currentDeltaSec <= 0) return;
-    const { dx, dy } = computeRadarOffset(currentDeltaSec, map.getZoom());
-    setRadarOffset(map, dx, dy);
+    setRadarOffset(map, dx, dy, true);
   });
 
   // Recheck coverage when user pans

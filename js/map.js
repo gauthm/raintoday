@@ -143,34 +143,30 @@ export function setRadarOpacity(opacity) {
  * @param {object} map - Leaflet map instance
  * @param {number} dx - X offset in pixels
  * @param {number} dy - Y offset in pixels
+ * @param {boolean} animated - If true, apply CSS transition matching Leaflet zoom duration
  */
-export function setRadarOffset(map, dx = 0, dy = 0) {
+export function setRadarOffset(map, dx = 0, dy = 0, animated = false) {
   if (!currentRadarLayer) return;
 
   const container = currentRadarLayer.getContainer();
   if (!container) return;
 
+  container.style.transition = '';
+
   if (dx === 0 && dy === 0) {
     container.style.transform = '';
-    container.style.margin = '';
-    container.style.width = '';
-    container.style.height = '';
     return;
   }
 
-  container.style.transform = `translate(${dx}px, ${dy}px)`;
-
-  const absDx = Math.abs(dx);
-  const absDy = Math.abs(dy);
-
-  if (absDx > 64 || absDy > 64) {
-    const padX = Math.ceil(absDx / 256) * 256;
-    const padY = Math.ceil(absDy / 256) * 256;
-    container.style.margin = `-${padY}px -${padX}px`;
-    container.style.width  = `calc(100% + ${padX * 2}px)`;
-    container.style.height = `calc(100% + ${padY * 2}px)`;
-    if (currentRadarLayer.redraw) currentRadarLayer.redraw();
+  if (animated) {
+    container.style.transition = 'transform 0.25s cubic-bezier(0,0,0.25,1)';
+    container.addEventListener('transitionend', function cleanup() {
+      container.style.transition = '';
+      container.removeEventListener('transitionend', cleanup);
+    }, { once: true });
   }
+
+  container.style.transform = `translate(${dx}px, ${dy}px)`;
 }
 
 /**
