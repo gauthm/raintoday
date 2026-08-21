@@ -220,6 +220,9 @@ html, body {
 #timeline-wrapper {
   width: 100%;
   position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ═══════════════════════════════════════
