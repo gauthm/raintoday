@@ -44,12 +44,6 @@
 
   <!-- Bottom panel: graph + slider + controls -->
   <div id="bottom-panel">
-    <div id="time-info">
-      <div id="current-time">--:--</div>
-      <div id="precip-info">Chargement...</div>
-      <button id="play-btn">▶ Play</button>
-      <button id="now-btn" title="Revenir à maintenant">Maintenant</button>
-    </div>
     <canvas id="graph-canvas"></canvas>
     <div id="time-labels"></div>
     <div id="slider-container">
@@ -59,6 +53,14 @@
           <div id="slider-handle"></div>
         </div>
         <div id="slider-ticks"></div>
+      </div>
+    </div>
+    <div id="time-info">
+      <div id="current-time">--:--</div>
+      <div id="precip-info">Chargement...</div>
+      <div id="controls">
+        <button id="play-btn">▶ Play</button>
+        <button id="now-btn" title="Revenir à maintenant">Maintenant</button>
       </div>
     </div>
   </div>

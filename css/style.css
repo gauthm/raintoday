@@ -172,44 +172,56 @@ html, body {
 /* Bottom panel */
 #bottom-panel {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1000;
+  width: 640px;
+  max-width: calc(100vw - 32px);
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border);
-  padding: 14px 16px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 16px 10px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
 }
 
 #time-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-top: 6px;
+  gap: 8px;
 }
 
 #current-time {
   color: var(--text);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 #precip-info {
   color: var(--text-dim);
-  font-size: 12px;
-  margin-left: 8px;
+  font-size: 11px;
   flex: 1;
+  text-align: center;
+}
+
+#controls {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 #play-btn {
   background: rgba(0, 102, 255, 0.12);
   border: 1px solid rgba(0, 102, 255, 0.3);
   border-radius: 6px;
-  padding: 4px 12px;
+  padding: 3px 10px;
   color: var(--accent);
-  font-size: 12px;
+  font-size: 11px;
   font-family: var(--font);
   cursor: pointer;
 }
@@ -222,9 +234,9 @@ html, body {
   background: rgba(0, 102, 255, 0.08);
   border: 1px solid rgba(0, 102, 255, 0.2);
   border-radius: 6px;
-  padding: 4px 12px;
+  padding: 3px 10px;
   color: var(--accent);
-  font-size: 12px;
+  font-size: 11px;
   font-family: var(--font);
   cursor: pointer;
   margin-left: 6px;
@@ -354,7 +366,8 @@ html, body {
   }
 
   #bottom-panel {
-    padding: 10px 12px 8px;
+    bottom: 10px;
+    padding: 8px 12px 8px;
   }
 
   #slider-wrapper {
