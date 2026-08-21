@@ -1,46 +1,49 @@
 # RainToday
 
-Radar de pluie en temps réel avec prévisions, carte interactive et graphique de précipitations.
+Real-time rain radar with forecasts, interactive map, and precipitation chart.
 
-## Aperçu
+## Features
 
-- Carte plein écran avec animation radar de pluie (2h passé → 2h futur)
-- Graphique de précipitations en barres (mm/h)
-- Slider temporel unifié avec play/pause
-- Géolocalisation + recherche de lieu
-- Prévision future par extrapolation du déplacement des cellules pluvieuses (basée sur le vent)
-- 100% vanilla JS, aucun build, aucune clé API, aucun backend
+- Full-screen map with animated rain radar (2h past → 2h future)
+- Bar chart of precipitation intensity (mm/h)
+- Unified time slider with play/pause animation
+- Geolocation + place search with autocomplete
+- Future radar extrapolation using wind speed & direction to translate the last radar frame
+- "Now" button to jump back to current time
+- Radar coverage detection — shows a badge when the current region has no radar data
+- Compact floating bottom panel with inline controls
+- 100% vanilla JS, no build step, no API keys, no backend
 
-## APIs utilisées
+## APIs Used
 
-- [RainViewer](https://www.rainviewer.com/) — tuiles radar de précipitations (passé)
-- [Open-Meteo](https://open-meteo.com/) — précipitations, probabilité, vent, géocodage
-- [Nominatim (OpenStreetMap)](https://nominatim.openstreetmap.org/) — reverse geocoding
-- [OpenStreetMap tiles](https://www.openstreetmap.org/) — carte de base
+- [RainViewer](https://www.rainviewer.com/) — radar precipitation tiles (past 2h)
+- [Open-Meteo](https://open-meteo.com/) — precipitation, probability, wind speed/direction, geocoding
+- [Nominatim (OpenStreetMap)](https://nominatim.openstreetmap.org/) — reverse geocoding for geolocation
+- [OpenStreetMap tiles](https://www.openstreetmap.org/) — base map
 
-## Lancer en local
+## Run Locally
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Puis ouvrir [http://localhost:8000](http://localhost:8000)
+Then open [http://localhost:8000](http://localhost:8000)
 
-Ou double-cliquer sur `RainToday.command` (macOS).
+Or double-click `RainToday.command` (macOS).
 
 ## Tests
 
-Ouvrir `test.html` dans un navigateur.
+Open `test.html` in a browser.
 
-## Déploiement
+## Deployment
 
-App statique — déployable sur Netlify, Vercel, GitHub Pages, ou tout hébergeur statique.
+Static app — deployable on Netlify, Vercel, GitHub Pages, or any static host.
 
-### Netlify (le plus simple)
+### Netlify (simplest)
 
-1. Aller sur [app.netlify.com/drop](https://app.netlify.com/drop)
-2. Glisser le dossier du projet
-3. C'est en ligne
+1. Go to [app.netlify.com/drop](https://app.netlify.com/drop)
+2. Drag the project folder
+3. It's live
 
 ### Vercel
 
@@ -48,39 +51,40 @@ App statique — déployable sur Netlify, Vercel, GitHub Pages, ou tout héberge
 npx vercel
 ```
 
-## Structure du projet
+## Project Structure
 
 ```
 raintoday/
-├── index.html              # Point d'entrée
-├── test.html               # Runner de tests
+├── index.html              # Entry point
+├── test.html               # Test runner
 ├── css/
-│   └── style.css           # Thème clair, layout, slider, graph
+│   └── style.css           # Light theme, layout, slider, graph, floating panel
 ├── js/
-│   ├── main.js             # Orchestrateur (data flow, UI updates)
-│   ├── map.js              # Leaflet, tuiles radar, marker, offset extrapolation
-│   ├── graph.js            # Canvas bar chart de précipitations
-│   ├── slider.js           # Slider temporel drag + play/pause
-│   ├── geolocation.js      # Geolocation avec fallback Paris
-│   ├── search.js           # Recherche de lieu avec autocomplete
+│   ├── main.js             # Orchestrator — data flow, UI updates, radar extrapolation
+│   ├── map.js              # Leaflet, radar tiles, double-buffer, coverage detection, marker
+│   ├── graph.js            # Canvas bar chart, auto-scale, slider-aligned bars
+│   ├── slider.js           # Time slider — drag, play/pause, pixel-based positioning
+│   ├── geolocation.js      # Geolocation with Paris fallback
+│   ├── search.js           # Place search with debounced autocomplete
 │   ├── api/
-│   │   ├── rainviewer.js   # API RainViewer (frames radar, tuiles)
-│   │   └── openmeteo.js    # API Open-Meteo (précipitations, vent, géocodage)
-│   ├── test-runner.js      # Framework de test minimaliste
-│   ├── test-rainviewer.js  # Tests RainViewer
-│   ├── test-openmeteo.js   # Tests Open-Meteo
-│   ├── test-slider.js      # Tests slider
-│   └── test-graph.js       # Tests graph
+│   │   ├── rainviewer.js   # RainViewer API — radar frames, tile URLs
+│   │   └── openmeteo.js    # Open-Meteo API — precipitation, wind, geocoding, reverse geocoding
+│   ├── test-runner.js      # Minimal test framework
+│   ├── test-rainviewer.js  # RainViewer tests
+│   ├── test-openmeteo.js   # Open-Meteo tests
+│   ├── test-slider.js      # Slider tests
+│   └── test-graph.js       # Graph tests
 └── assets/
-    └── ...                 # Icônes, images
+    └── ...                 # Icons, images
 ```
 
 ## Limitations
 
-- Le radar RainViewer couvre l'Europe, l'Amérique du Nord, l'Asie et l'Australie. Pas de couverture pour l'Afrique, l'Amérique du Sud et les océans.
-- L'extrapolation future est une estimation basée sur le vent moyen. Précision diminue avec le temps (fiable ~30-60min, indicative au-delà).
-- RainViewer ne fournit que 2h de données passées.
+- RainViewer radar covers Europe, North America, Asia, and Australia. No coverage for Africa, South America, or oceans.
+- Future extrapolation is an estimate based on average wind. Accuracy decreases with time (reliable ~30-60min, indicative beyond).
+- RainViewer provides only 2h of past data.
+- Open-Meteo precipitation is point-based (nearest weather station), not radar — may show 0 mm/h even when radar shows nearby rain.
 
-## Licence
+## License
 
-MIT — voir [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
