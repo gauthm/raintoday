@@ -9,6 +9,7 @@ import { initSlider } from './slider.js';
 import { getUserLocationWithFallback } from './geolocation.js';
 import { initSearch } from './search.js';
 import { t } from './i18n.js';
+import { sampleRadarAtLocation } from './radar-sampler.js';
 
 // State
 let map = null;
@@ -16,6 +17,8 @@ let radarData = null; // { host, frames: [{time, path}] }
 let precipData = []; // [{ time, value }]
 let windData = { speed: 0, direction: 0 };
 let userLat = 48.85;
+let userLon = 2.35;
+let currentDeltaSec = 0;
 let sliderApi = null;
 let currentIdx = 0;
 let lastRadarFrameTime = null;
@@ -62,6 +65,18 @@ function findNearestRadarFrame(ts) {
   return bestFrame;
 }
 
+function renderPrecipText(el, value, prob, date) {
+  const isFuture = date.getTime() > Date.now();
+  const probSuffix = isFuture && prob > 0 ? t.probSuffix(prob) : '';
+
+  if (value <= 0)        el.textContent = prob > 0 ? t.noRainRisk(prob) : t.noRain;
+  else if (value < 0.5)  el.textContent = t.veryLightRain(value) + probSuffix;
+  else if (value < 2)    el.textContent = t.lightRain(value) + probSuffix;
+  else if (value < 10)   el.textContent = t.moderateRain(value) + probSuffix;
+  else if (value < 20)   el.textContent = t.heavyRain(value) + probSuffix;
+  else                   el.textContent = t.veryHeavyRain(value) + probSuffix;
+}
+
 /**
  * Update the time info display.
  * @param {number} idx - Current index in precipitation data
@@ -80,24 +95,23 @@ function updateTimeInfo(idx) {
   const date = new Date(entry.time);
   timeEl.textContent = formatLocalDate(date);
 
-  const value = entry.value;
-  const prob = entry.probability || 0;
-  const now = Date.now();
-  const isFuture = date.getTime() > now;
-  const probSuffix = isFuture && prob > 0 ? t.probSuffix(prob) : '';
+  renderPrecipText(precipEl, entry.value, entry.probability, date);
 
-  if (value <= 0) {
-    precipEl.textContent = prob > 0 ? t.noRainRisk(prob) : t.noRain;
-  } else if (value < 0.5) {
-    precipEl.textContent = t.veryLightRain(value) + probSuffix;
-  } else if (value < 2) {
-    precipEl.textContent = t.lightRain(value) + probSuffix;
-  } else if (value < 10) {
-    precipEl.textContent = t.moderateRain(value) + probSuffix;
-  } else if (value < 20) {
-    precipEl.textContent = t.heavyRain(value) + probSuffix;
-  } else {
-    precipEl.textContent = t.veryHeavyRain(value) + probSuffix;
+  if (radarData) {
+    const ts = Math.floor(date.getTime() / 1000);
+    const lastFrame = radarData.frames[radarData.frames.length - 1];
+    const frameToSample = ts > lastFrame.time
+      ? lastFrame
+      : findNearestRadarFrame(ts);
+
+    if (frameToSample) {
+      sampleRadarAtLocation(radarData.host, frameToSample.path, userLat, userLon)
+        .then(mmh => {
+          if (mmh !== null && idx === currentIdx) {
+            renderPrecipText(precipEl, mmh, entry.probability, date);
+          }
+        });
+    }
   }
 }
 
@@ -159,6 +173,7 @@ function updateRadar(idx) {
 
   if (isFuture) {
     const deltaSec = ts - lastFrame.time;
+    currentDeltaSec = deltaSec;
 
     if (lastFrame.path !== lastRadarPath) {
       lastRadarPath = lastFrame.path;
@@ -171,6 +186,7 @@ function updateRadar(idx) {
     const minutesAhead = Math.round((ts - (Date.now() / 1000)) / 60);
     showForecastBadge(map, minutesAhead);
   } else {
+    currentDeltaSec = 0;
     setRadarOffset(map, 0, 0);
     hideForecastBadge();
     if (frame.path !== lastRadarPath) {
@@ -319,6 +335,7 @@ function setupSlider() {
  */
 async function loadLocation(lat, lon) {
   userLat = lat;
+  userLon = lon;
   setMarker(map, lat, lon);
   centerMap(map, lat, lon, 9);
 
@@ -416,6 +433,18 @@ async function init() {
   map.on('zoomend', () => {
     updateRadar(currentIdx);
     recheckRadarCoverage(map);
+  });
+
+  map.on('zoomanim', (e) => {
+    if (currentDeltaSec <= 0) return;
+    const { dx, dy } = computeRadarOffset(currentDeltaSec, e.zoom);
+    setRadarOffset(map, dx, dy);
+  });
+
+  map.on('zoom', () => {
+    if (currentDeltaSec <= 0) return;
+    const { dx, dy } = computeRadarOffset(currentDeltaSec, map.getZoom());
+    setRadarOffset(map, dx, dy);
   });
 
   // Recheck coverage when user pans
