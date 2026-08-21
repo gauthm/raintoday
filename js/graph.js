@@ -77,6 +77,11 @@ export function renderGraph(canvas, data, currentIndex) {
     return;
   }
 
+  if (data.length > 0) {
+    const maxVal = Math.max(...data.map(d => d.value));
+    console.debug('[graph] data points:', data.length, 'max value:', maxVal, 'current idx:', currentIndex, 'value:', data[currentIndex]?.value);
+  }
+
   // Auto-scale: use max value in data, with a floor of 1 mm/h
   const dataMax = Math.max(...data.map(d => d.value));
   const maxValue = Math.max(1, dataMax);
@@ -86,7 +91,7 @@ export function renderGraph(canvas, data, currentIndex) {
   const totalGapWidth = gap * (barCount - 1);
   const totalBarWidth = cssWidth - totalGapWidth;
   const barWidth = Math.max(1, totalBarWidth / barCount);
-  const maxHeight = cssHeight - 4;
+  const maxHeight = cssHeight - 8;
   const stepWidth = barWidth + gap;
 
   // Find "now" index (the frame closest to current time)
@@ -111,11 +116,11 @@ export function renderGraph(canvas, data, currentIndex) {
       ctx.shadowBlur = 0;
 
       // Triangle marker — aligned with slider handle position
-      // Slider maps index i to: (i / (barCount - 1)) * cssWidth
+      ctx.fillStyle = '#4acaea';
       const triX = barCount > 1
         ? (i / (barCount - 1)) * cssWidth
         : cssWidth / 2;
-      const triY = y - 6;
+      const triY = Math.max(0, y - 6);
       ctx.beginPath();
       ctx.moveTo(triX, triY + 5);
       ctx.lineTo(triX - 4, triY);
