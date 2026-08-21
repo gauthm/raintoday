@@ -289,7 +289,7 @@ html, body {
 #slider-handle {
   position: absolute;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -298,6 +298,7 @@ html, body {
   border: 2px solid var(--accent);
   cursor: grab;
   pointer-events: none;
+  margin-left: -8px;
 }
 
 #slider-handle.dragging {

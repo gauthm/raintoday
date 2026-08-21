@@ -155,8 +155,14 @@ export function initSlider(options) {
 
   function updateUI() {
     const pct = timeToPercent(frames[currentIdx].time, startTime, endTime);
-    fill.style.width = `${pct}%`;
-    handle.style.left = `${pct}%`;
+    const trackWidth = track.offsetWidth;
+    const handleWidth = handle.offsetWidth;
+    const handleRadius = handleWidth / 2;
+    const centerX = (pct / 100) * (trackWidth - handleWidth) + handleRadius;
+
+    fill.style.left = '0px';
+    fill.style.width = `${centerX}px`;
+    handle.style.left = `${centerX}px`;
   }
 
   function setIndex(idx) {
