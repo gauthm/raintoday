@@ -212,13 +212,13 @@ html, body {
 /* Track : conteneur parent du fill ET du handle */
 #slider-track {
   position: relative;
-  width: 100%;
+  width: calc(100% - 16px);
   height: 4px;
   background: rgba(0, 0, 0, 0.10);
   border-radius: 4px;
   overflow: visible;
   cursor: pointer;
-  margin: 8px 0 0;
+  margin: 8px 8px 0;
 }
 
 /* Fill : ENFANT de slider-track, position absolute */
@@ -260,9 +260,9 @@ html, body {
 /* ── Ticks ── */
 #slider-ticks {
   position: relative;
-  width: 100%;
+  width: calc(100% - 16px);
   height: 18px;
-  margin-top: 3px;
+  margin: 3px 0 0 8px;
 }
 
 .slider-tick {

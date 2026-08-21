@@ -101,9 +101,11 @@ export function renderGraph(canvas, data, currentIndex) {
   for (let i = 0; i < barCount; i++) {
     const value = data[i].value;
     const height = mapValueToHeight(value, maxHeight, maxValue);
-    // Center bar on slider position, clamp so it doesn't clip at edges
-    const centerX = barCount > 1 ? (i / (barCount - 1)) * cssWidth : cssWidth / 2;
-    const x = Math.max(0, Math.min(cssWidth - barWidth, centerX - barWidth / 2));
+    const usableWidth = cssWidth - barWidth;
+    const centerX = barCount > 1
+      ? (barWidth / 2) + (i / (barCount - 1)) * usableWidth
+      : cssWidth / 2;
+    const x = centerX - barWidth / 2;
     const y = cssHeight - height;
 
     const color = colorForPrecipitation(value);
