@@ -35,6 +35,7 @@ const fr = {
   geolocNotSupported: 'Geolocation non supportée par ce navigateur',
   initError: "Erreur d'initialisation",
   searchPlaceHint: (err) => `${err} — recherchez un lieu`,
+  estimatedForecast: 'Prévision estimée',
 };
 
 const en = {
@@ -67,6 +68,7 @@ const en = {
   geolocNotSupported: 'Geolocation not supported by this browser',
   initError: 'Initialization error',
   searchPlaceHint: (err) => `${err} — search for a place`,
+  estimatedForecast: 'Estimated forecast',
 };
 
 export const t = isFrench ? fr : en;

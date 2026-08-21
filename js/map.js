@@ -130,6 +130,15 @@ export function setRadarLayer(map, host, path, options = {}) {
 }
 
 /**
+ * Update the opacity of the current radar layer without recreating it.
+ * @param {number} opacity - 0 to 1
+ */
+export function setRadarOpacity(opacity) {
+  if (!currentRadarLayer) return;
+  currentRadarLayer.setOpacity(opacity);
+}
+
+/**
  * Offset the radar tile layer by a number of pixels (for future extrapolation).
  * @param {object} map - Leaflet map instance
  * @param {number} dx - X offset in pixels
@@ -143,8 +152,24 @@ export function setRadarOffset(map, dx = 0, dy = 0) {
 
   if (dx === 0 && dy === 0) {
     container.style.transform = '';
-  } else {
-    container.style.transform = `translate(${dx}px, ${dy}px)`;
+    container.style.margin = '';
+    container.style.width = '';
+    container.style.height = '';
+    return;
+  }
+
+  container.style.transform = `translate(${dx}px, ${dy}px)`;
+
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+
+  if (absDx > 64 || absDy > 64) {
+    const padX = Math.ceil(absDx / 256) * 256;
+    const padY = Math.ceil(absDy / 256) * 256;
+    container.style.margin = `-${padY}px -${padX}px`;
+    container.style.width  = `calc(100% + ${padX * 2}px)`;
+    container.style.height = `calc(100% + ${padY * 2}px)`;
+    if (currentRadarLayer.redraw) currentRadarLayer.redraw();
   }
 }
 

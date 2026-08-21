@@ -42,7 +42,7 @@ async function fetchWithRetry(url, timeout = 5000, retries = 1) {
 export function buildPrecipitationUrl(lat, lon) {
   return `${OPEN_METEO_FORECAST}?latitude=${lat}&longitude=${lon}` +
     `&minutely_15=precipitation&past_days=1&forecast_days=1` +
-    `&hourly=precipitation,precipitation_probability,wind_speed_10m,wind_direction_10m&past_days=1&forecast_days=3` +
+    `&hourly=precipitation,precipitation_probability,wind_speed_10m,wind_direction_10m,wind_speed_850hPa,wind_direction_850hPa&past_days=1&forecast_days=3` +
     `&timezone=UTC`;
 }
 
@@ -136,9 +136,14 @@ export function extractCurrentWind(data) {
       bestIdx = i;
     }
   }
+  const speed850 = data.hourly.wind_speed_850hPa?.[bestIdx];
+  const dir850   = data.hourly.wind_direction_850hPa?.[bestIdx];
+  const speed10  = data.hourly.wind_speed_10m?.[bestIdx] ?? 0;
+  const dir10    = data.hourly.wind_direction_10m?.[bestIdx] ?? 0;
+
   return {
-    speed: data.hourly.wind_speed_10m?.[bestIdx] ?? 0,
-    direction: data.hourly.wind_direction_10m?.[bestIdx] ?? 0,
+    speed:     (speed850 != null && speed850 > 0) ? speed850 : speed10,
+    direction: (dir850   != null && speed850 > 0) ? dir850   : dir10,
   };
 }
 

@@ -3,7 +3,7 @@
  */
 import { fetchRadarFrames, selectFrames } from './api/rainviewer.js';
 import { fetchPrecipitation, extractWindow, reverseGeocode } from './api/openmeteo.js';
-import { initMap, setRadarLayer, setRadarOffset, setMarker, centerMap, clearRadarLayer, showRadarUnavailable, recheckRadarCoverage } from './map.js';
+import { initMap, setRadarLayer, setRadarOpacity, setRadarOffset, setMarker, centerMap, clearRadarLayer, showRadarUnavailable, recheckRadarCoverage } from './map.js';
 import { renderGraph, findNearestIndex } from './graph.js';
 import { initSlider } from './slider.js';
 import { getUserLocationWithFallback } from './geolocation.js';
@@ -15,9 +15,11 @@ let map = null;
 let radarData = null; // { host, frames: [{time, path}] }
 let precipData = []; // [{ time, value }]
 let windData = { speed: 0, direction: 0 };
+let userLat = 48.85;
 let sliderApi = null;
 let currentIdx = 0;
-let lastRadarFrameTime = null; // timestamp of the last available radar frame
+let lastRadarFrameTime = null;
+const EXTRAPOLATION_MAX_SEC = 90 * 60; // timestamp of the last available radar frame
 
 /**
  * Show a toast message for 3 seconds.
@@ -115,7 +117,8 @@ function computeRadarOffset(deltaSec, zoom) {
   const distKm = windData.speed * (deltaSec / 3600);
 
   // Pixels per km at current zoom: 256 * 2^zoom / 40075 (Earth circumference km)
-  const pxPerKm = (256 * Math.pow(2, zoom)) / 40075;
+  const latRad = (userLat * Math.PI) / 180;
+  const pxPerKm = (256 * Math.pow(2, zoom)) / (40075 * Math.cos(latRad));
   const distPx = distKm * pxPerKm;
 
   // Wind direction = where wind comes FROM (degrees clockwise from North)
@@ -147,25 +150,36 @@ function updateRadar(idx) {
     clearRadarLayer(map);
     lastRadarPath = null;
     setRadarOffset(map, 0, 0);
+    hideForecastBadge();
     return;
   }
 
-  // Check if this is a future extrapolation
   const lastFrame = radarData.frames[radarData.frames.length - 1];
   const isFuture = ts > lastFrame.time;
 
   if (isFuture) {
-    // Use last frame, apply offset
+    const deltaSec = ts - lastFrame.time;
+
+    const opacity = Math.max(
+      0.25,
+      0.75 - 0.50 * (deltaSec / EXTRAPOLATION_MAX_SEC)
+    );
+
     if (lastFrame.path !== lastRadarPath) {
       lastRadarPath = lastFrame.path;
-      setRadarLayer(map, radarData.host, lastFrame.path, { color: 2, size: 256, smooth: 1, snow: 1, opacity: 0.8 });
+      setRadarLayer(map, radarData.host, lastFrame.path, { color: 2, size: 256, smooth: 1, snow: 1, opacity });
+    } else {
+      setRadarOpacity(opacity);
     }
-    const deltaSec = ts - lastFrame.time;
+
     const { dx, dy } = computeRadarOffset(deltaSec, map.getZoom());
     setRadarOffset(map, dx, dy);
+
+    const minutesAhead = Math.round((ts - (Date.now() / 1000)) / 60);
+    showForecastBadge(map, minutesAhead);
   } else {
-    // Normal: show nearest frame, reset offset
     setRadarOffset(map, 0, 0);
+    hideForecastBadge();
     if (frame.path !== lastRadarPath) {
       lastRadarPath = frame.path;
       setRadarLayer(map, radarData.host, frame.path, { color: 2, size: 256, smooth: 1, snow: 1, opacity: 0.8 });
@@ -184,6 +198,32 @@ function updateGraph(idx) {
     return;
   }
   renderGraph(canvas, precipData, idx);
+}
+
+let forecastBadge = null;
+
+function showForecastBadge(map, minutesAhead) {
+  const label = `${t.estimatedForecast} +${minutesAhead} min`;
+  if (forecastBadge) {
+    const el = forecastBadge.getContainer();
+    if (el) el.textContent = label;
+    return;
+  }
+  forecastBadge = L.control({ position: 'bottomleft' });
+  forecastBadge.onAdd = function () {
+    const div = L.DomUtil.create('div', 'forecast-badge');
+    div.style.cssText = 'background:rgba(20,20,40,0.85);backdrop-filter:blur(8px);border:1px solid rgba(100,160,255,0.4);border-radius:8px;padding:5px 10px;font-size:12px;color:#aac8ff;margin-bottom:30px;margin-left:10px;';
+    div.textContent = label;
+    return div;
+  };
+  forecastBadge.addTo(map);
+}
+
+function hideForecastBadge() {
+  if (forecastBadge) {
+    forecastBadge.remove();
+    forecastBadge = null;
+  }
 }
 
 /**
@@ -285,6 +325,7 @@ function setupSlider() {
  * @param {number} lon
  */
 async function loadLocation(lat, lon) {
+  userLat = lat;
   setMarker(map, lat, lon);
   centerMap(map, lat, lon, 9);
 
