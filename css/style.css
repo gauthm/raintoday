@@ -292,6 +292,7 @@ html, body {
   width: calc(100% - 16px);
   margin: 10px 8px 0;
   height: 18px;
+  overflow: visible;
 }
 
 .slider-tick {

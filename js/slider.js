@@ -98,10 +98,7 @@ function renderTicks(ticksEl, frames) {
     const tick = document.createElement('div');
     tick.className = isLabel ? 'slider-tick' : 'slider-tick-minor';
     tick.style.left = pct + '%';
-
-    if      (pct < 2)  tick.style.transform = 'translateX(0%)';
-    else if (pct > 98) tick.style.transform = 'translateX(-100%)';
-    else               tick.style.transform = 'translateX(-50%)';
+    tick.style.transform = 'translateX(-50%)';
 
     if (isLabel) {
       const label = document.createElement('span');

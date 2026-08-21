@@ -160,16 +160,9 @@ function updateRadar(idx) {
   if (isFuture) {
     const deltaSec = ts - lastFrame.time;
 
-    const opacity = Math.max(
-      0.25,
-      0.75 - 0.50 * (deltaSec / EXTRAPOLATION_MAX_SEC)
-    );
-
     if (lastFrame.path !== lastRadarPath) {
       lastRadarPath = lastFrame.path;
-      setRadarLayer(map, radarData.host, lastFrame.path, { color: 2, size: 256, smooth: 1, snow: 1, opacity });
-    } else {
-      setRadarOpacity(opacity);
+      setRadarLayer(map, radarData.host, lastFrame.path, { color: 2, size: 256, smooth: 1, snow: 1, opacity: 0.8 });
     }
 
     const { dx, dy } = computeRadarOffset(deltaSec, map.getZoom());
