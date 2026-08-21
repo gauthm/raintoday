@@ -9,20 +9,20 @@
   <title>RainToday — Radar Pluie</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link rel="stylesheet" href="css/style.css?v=9" />
+  <link rel="stylesheet" href="css/style.css?v=10" />
 </head>
 <body>
   <!-- Map container -->
   <div id="map"></div>
 
-  <!-- Top overlay: search -->
+  <!-- Top overlay: search + geolocation -->
   <div id="search-container">
-    <input type="text" id="search-input" class="glass-overlay" placeholder="" aria-label="" autocomplete="off" />
+    <div id="search-row">
+      <input type="text" id="search-input" class="glass-overlay" placeholder="" aria-label="" autocomplete="off" />
+      <button id="geoloc-btn" class="glass-overlay" title="" aria-label="">📍</button>
+    </div>
     <div id="search-results" class="glass-overlay"></div>
   </div>
-
-  <!-- Top right: geolocation button -->
-  <button id="geoloc-btn" class="glass-overlay" title="" aria-label="">📍</button>
 
   <!-- Right overlay: color legend (below geoloc button) -->
   <div id="legend" class="glass-overlay">

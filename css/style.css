@@ -6,7 +6,7 @@
 
 :root {
   --bg: #f0f0f4;
-  --overlay-bg: rgba(255, 255, 255, 0.92);
+  --overlay-bg: rgba(255, 255, 255, 0.82);
   --border: rgba(0, 0, 0, 0.12);
   --accent: #0066ff;
   --accent-light: #4acaea;
@@ -49,18 +49,29 @@ html, body {
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
-  width: 280px;
-  max-width: 90vw;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+}
+
+#search-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 #search-input {
-  width: 100%;
+  flex: 1;
   border-radius: 24px;
   padding: 10px 16px;
   color: var(--text);
   font-size: 14px;
   font-family: var(--font);
   outline: none;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 #search-input::placeholder {
@@ -69,13 +80,19 @@ html, body {
 
 #search-input:focus {
   border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 #search-results {
   display: none;
   border-radius: 12px;
-  margin-top: 4px;
+  margin-top: 6px;
   overflow: hidden;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
 }
 
 #search-results.visible {
@@ -99,24 +116,26 @@ html, body {
 
 /* Geolocation button */
 #geoloc-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 1000;
+  flex-shrink: 0;
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   color: var(--text);
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: background 0.15s;
 }
 
 #geoloc-btn:hover {
-  background: rgba(0, 102, 255, 0.18);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 /* Legend */
@@ -127,6 +146,10 @@ html, body {
   z-index: 1000;
   border-radius: 8px;
   padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .legend-title {
@@ -163,6 +186,10 @@ html, body {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 #toast.visible {
@@ -180,9 +207,9 @@ html, body {
   z-index: 1000;
   width: 640px;
   max-width: calc(100vw - 24px);
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 18px;
   padding: 10px 16px 10px;
@@ -378,12 +405,31 @@ html, body {
   color: #888 !important;
 }
 
+.leaflet-bar {
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(0, 0, 0, 0.10) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10) !important;
+}
+
 .leaflet-bar a {
-  background: rgba(255, 255, 255, 0.95) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   color: #333 !important;
-  border-color: rgba(0, 0, 0, 0.1) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  border-radius: 0 !important;
+}
+
+.leaflet-bar a:last-child {
+  border-bottom: none !important;
 }
 
 .leaflet-bar a:hover {
-  background: rgba(0, 102, 255, 0.15) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
 }
