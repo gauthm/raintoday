@@ -292,6 +292,7 @@ html, body {
 #time-info {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   margin-top: 8px;
 }
@@ -301,7 +302,7 @@ html, body {
   font-weight: 700;
   color: #1a1a2e;
   letter-spacing: -0.5px;
-  min-width: 52px;
+  min-width: 60px;
   flex-shrink: 0;
 }
 

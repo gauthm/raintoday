@@ -86,37 +86,34 @@ function formatTickTime(ts) {
  */
 function renderTicks(ticksEl, frames) {
   ticksEl.innerHTML = '';
-
-  const maxTicks = 7;
-  const step = Math.max(1, Math.ceil(frames.length / maxTicks));
   const total = frames.length;
-  const startTime = frames[0].time;
-  const endTime = frames[total - 1].time;
+  if (total === 0) return;
 
-  const tickIndices = new Set();
-  for (let i = 0; i < total; i += step) tickIndices.add(i);
-  tickIndices.add(total - 1);
+  const indices = new Set();
+  indices.add(0);
+  indices.add(Math.floor(total / 2));
+  indices.add(total - 1);
 
-  tickIndices.forEach(i => {
-    const pct = timeToPercent(frames[i].time, startTime, endTime);
+  const step = Math.max(1, Math.ceil(total / 6));
+  for (let i = 0; i < total; i += step) indices.add(i);
+
+  const sorted = [...indices].sort((a, b) => a - b);
+
+  sorted.forEach(i => {
+    const pct = timeToPercent(frames[i].time, frames[0].time, frames[total - 1].time);
 
     const tick = document.createElement('div');
     tick.className = 'slider-tick';
     tick.style.left = pct + '%';
 
-    if (pct < 5) {
-      tick.style.transform = 'translateX(0%)';
-    } else if (pct > 95) {
-      tick.style.transform = 'translateX(-100%)';
-    } else {
-      tick.style.transform = 'translateX(-50%)';
-    }
+    if (pct < 4)       tick.style.transform = 'translateX(0%)';
+    else if (pct > 96) tick.style.transform = 'translateX(-100%)';
+    else               tick.style.transform = 'translateX(-50%)';
 
     const label = document.createElement('span');
     label.className = 'slider-tick-label';
     label.textContent = formatTickTime(frames[i].time);
     tick.appendChild(label);
-
     ticksEl.appendChild(tick);
   });
 }
