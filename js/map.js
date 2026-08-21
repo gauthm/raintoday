@@ -189,6 +189,59 @@ export function clearRadarLayer(map) {
 }
 
 /**
+ * Canvas overlay for warped nowcast frames.
+ */
+let nowcastCanvas = null;
+let nowcastOverlay = null;
+
+/**
+ * Show a pre-warped nowcast frame as a Leaflet imageOverlay.
+ * @param {object} map - Leaflet map instance
+ * @param {ImageData} imageData - Warped pixel data
+ * @param {object} bounds - { north, south, east, west }
+ */
+export function showNowcastFrame(map, imageData, bounds) {
+  if (!nowcastCanvas) {
+    nowcastCanvas = document.createElement('canvas');
+  }
+  nowcastCanvas.width  = imageData.width;
+  nowcastCanvas.height = imageData.height;
+  nowcastCanvas.getContext('2d').putImageData(imageData, 0, 0);
+
+  const dataUrl = nowcastCanvas.toDataURL('image/png');
+  const leafletBounds = [[bounds.south, bounds.west], [bounds.north, bounds.east]];
+
+  if (nowcastOverlay) {
+    nowcastOverlay.setUrl(dataUrl);
+    nowcastOverlay.setBounds(leafletBounds);
+  } else {
+    nowcastOverlay = L.imageOverlay(dataUrl, leafletBounds, {
+      opacity: 0.8,
+      zIndex: 201,
+    }).addTo(map);
+  }
+}
+
+/**
+ * Hide the nowcast canvas overlay.
+ * @param {object} map - Leaflet map instance
+ */
+export function hideNowcastFrame(map) {
+  if (nowcastOverlay) {
+    nowcastOverlay.remove();
+    nowcastOverlay = null;
+  }
+}
+
+/**
+ * Update opacity of the nowcast overlay.
+ * @param {number} opacity - 0 to 1
+ */
+export function setNowcastOpacity(opacity) {
+  if (nowcastOverlay) nowcastOverlay.setOpacity(opacity);
+}
+
+/**
  * Add or update a location marker on the map.
  * @param {object} map - Leaflet map instance
  * @param {number} lat - Latitude

@@ -3,7 +3,7 @@
  * Fetches radar frame timestamps and builds tile URLs.
  */
 
-const RAINVIEWER_API = 'https://api.rainviewer.com/public/weather-maps.json';
+const RAINVIEWER_API = 'https://api.librewxr.net/public/weather-maps.json';
 
 /**
  * Fetch with timeout and single retry.

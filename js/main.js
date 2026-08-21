@@ -3,7 +3,7 @@
  */
 import { fetchRadarFrames, selectFrames } from './api/rainviewer.js';
 import { fetchPrecipitation, extractWindow, reverseGeocode } from './api/openmeteo.js';
-import { initMap, setRadarLayer, setRadarOpacity, setRadarOffset, setMarker, centerMap, clearRadarLayer, showRadarUnavailable, recheckRadarCoverage } from './map.js';
+import { initMap, setRadarLayer, setRadarOpacity, setRadarOffset, setMarker, centerMap, clearRadarLayer, showRadarUnavailable, recheckRadarCoverage, showNowcastFrame, hideNowcastFrame, setNowcastOpacity } from './map.js';
 import { renderGraph, findNearestIndex } from './graph.js';
 import { initSlider } from './slider.js';
 import { getUserLocationWithFallback } from './geolocation.js';
@@ -11,6 +11,7 @@ import { initSearch } from './search.js';
 import { t } from './i18n.js';
 import { sampleRadarAtLocation } from './radar-sampler.js';
 import { computeRadarMotion } from './radar-motion.js';
+import { computeNowcastFrames } from './nowcast-engine.js';
 
 // State
 let map = null;
@@ -21,6 +22,7 @@ let userLat = 48.85;
 let userLon = 2.35;
 let currentDeltaSec = 0;
 let motionData = null;
+let clientNowcastFrames = [];
 let sliderApi = null;
 let currentIdx = 0;
 let lastRadarFrameTime = null;
@@ -221,50 +223,76 @@ function computeLatLngOffset(deltaSec) {
 }
 
 /**
+ * Build client-side nowcast frames via optical flow + backward warp.
+ * Generates frames beyond server nowcast coverage (up to H+2h).
+ */
+async function buildClientNowcast() {
+  clientNowcastFrames = [];
+  if (!radarData || radarData.frames.length < 2) return;
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const pastOnly = radarData.frames.filter(f => f.time <= nowSec);
+  if (pastOnly.length < 2) return;
+
+  const serverNowcastEnd = radarData.frames[radarData.frames.length - 1].time;
+  const gapSec = serverNowcastEnd - nowSec;
+  const extraCount = Math.ceil(((2 * 3600) - gapSec) / (10 * 60));
+  if (extraCount <= 0) return;
+
+  console.log(`[nowcast] Server covers +${Math.round(gapSec / 60)}min, generating ${extraCount} extra client frames`);
+
+  clientNowcastFrames = await computeNowcastFrames(
+    radarData.host, pastOnly, userLat, userLon, extraCount,
+  );
+}
+
+/**
  * Update the radar layer on the map for the selected time.
- * For future timestamps beyond last radar frame, extrapolate by offsetting the last frame.
+ * Uses server tiles for past + server nowcast, client warp for beyond.
  * @param {number} idx - Current index in precipitation data
  */
 function updateRadar(idx) {
-  if (!map) return;
-  if (precipData.length === 0) return;
+  if (!map || precipData.length === 0) return;
+  if (!radarData || radarData.frames.length === 0) return;
 
   const date = new Date(precipData[idx].time);
   const ts = Math.floor(date.getTime() / 1000);
-  const frame = findNearestRadarFrame(ts);
 
-  if (!frame) {
-    clearRadarLayer(map);
-    lastRadarPath = null;
-    setRadarOffset(map, 0, 0);
-    hideForecastBadge();
-    return;
-  }
+  const serverFrame = findNearestRadarFrame(ts);
+  const lastServerFrame = radarData.frames[radarData.frames.length - 1];
+  const isServerFuture = ts > lastServerFrame.time;
 
-  const lastFrame = radarData.frames[radarData.frames.length - 1];
-  const isFuture = ts > lastFrame.time;
+  const clientFrame = clientNowcastFrames.length > 0
+    ? clientNowcastFrames.reduce((best, f) => {
+        return Math.abs(f.time - ts) < Math.abs(best.time - ts) ? f : best;
+      }, clientNowcastFrames[0])
+    : null;
 
-  if (isFuture) {
-    const deltaSec = ts - lastFrame.time;
-    currentDeltaSec = deltaSec;
+  const useClientFrame = isServerFuture && clientFrame && Math.abs(clientFrame.time - ts) < 15 * 60;
 
-    if (lastFrame.path !== lastRadarPath) {
-      lastRadarPath = lastFrame.path;
-      setRadarLayer(map, radarData.host, lastFrame.path, { color: 2, size: 256, smooth: 1, snow: 1, opacity: 0.8 });
-    }
+  if (useClientFrame) {
+    const extraSec = ts - lastServerFrame.time;
+    const opacity = Math.max(0.3, 0.8 - 0.5 * (extraSec / (60 * 60)));
 
-    const { dx, dy } = computeRadarOffset(deltaSec, map.getZoom());
-    setRadarOffset(map, dx, dy);
+    showNowcastFrame(map, clientFrame.imageData, clientFrame.bounds);
+    setNowcastOpacity(opacity);
+    setRadarOpacity(0);
 
+    currentDeltaSec = extraSec;
     const minutesAhead = Math.round((ts - (Date.now() / 1000)) / 60);
     showForecastBadge(map, minutesAhead);
   } else {
+    hideNowcastFrame(map);
+    setRadarOpacity(0.8);
     currentDeltaSec = 0;
-    setRadarOffset(map, 0, 0);
     hideForecastBadge();
-    if (frame.path !== lastRadarPath) {
-      lastRadarPath = frame.path;
-      setRadarLayer(map, radarData.host, frame.path, { color: 2, size: 256, smooth: 1, snow: 1, opacity: 0.8 });
+    setRadarOffset(map, 0, 0);
+
+    if (serverFrame && serverFrame.path !== lastRadarPath) {
+      lastRadarPath = serverFrame.path;
+      setRadarLayer(map, radarData.host, serverFrame.path, {
+        color: 2, size: 256, smooth: 1, snow: 1, opacity: 0.8,
+      });
     }
   }
 }
@@ -423,6 +451,7 @@ async function loadLocation(lat, lon) {
   ]);
 
   await computeMotionFromRadar();
+  buildClientNowcast().catch(e => console.warn('[nowcast] build failed:', e));
 
   if (precipData.length > 0) {
     setupSlider();
@@ -508,12 +537,6 @@ async function init() {
   map.on('zoomend', () => {
     updateRadar(currentIdx);
     recheckRadarCoverage(map);
-  });
-
-  map.on('zoomanim', (e) => {
-    if (currentDeltaSec <= 0) return;
-    const { dx, dy } = computeRadarOffset(currentDeltaSec, e.zoom);
-    setRadarOffset(map, dx, dy, true);
   });
 
   // Recheck coverage when user pans
