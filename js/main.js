@@ -4,7 +4,7 @@
 import { fetchRadarFrames, selectFrames } from './api/rainviewer.js';
 import { fetchPrecipitation, extractWindow, reverseGeocode } from './api/openmeteo.js';
 import { initMap, setRadarLayer, setRadarOffset, setMarker, centerMap, clearRadarLayer, showRadarUnavailable, recheckRadarCoverage } from './map.js';
-import { renderGraph, renderTimeLabels, findNearestIndex } from './graph.js';
+import { renderGraph, findNearestIndex } from './graph.js';
 import { initSlider } from './slider.js';
 import { getUserLocationWithFallback } from './geolocation.js';
 import { initSearch } from './search.js';
@@ -305,7 +305,6 @@ async function loadLocation(lat, lon) {
   // Render graph with initial data
   const canvas = document.getElementById('graph-canvas');
   renderGraph(canvas, precipData, currentIdx);
-  renderTimeLabels(document.getElementById('time-labels'), precipData);
 }
 
 /**

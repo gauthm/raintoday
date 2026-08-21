@@ -132,7 +132,6 @@ function renderTicks(ticksEl, frames) {
 export function initSlider(options) {
   const { frames, onTimeChange, onPlayStateChange, onDragEnd } = options;
 
-  const wrapper = document.getElementById('slider-wrapper');
   const track = document.getElementById('slider-track');
   const fill = document.getElementById('slider-fill');
   const handle = document.getElementById('slider-handle');
@@ -155,21 +154,13 @@ export function initSlider(options) {
   renderTicks(ticksEl, frames);
 
   function updateUI() {
-    const HANDLE_SIZE = 16;
-    const HANDLE_RADIUS = HANDLE_SIZE / 2;
-
     const trackWidth = track.offsetWidth;
-    if (trackWidth === 0) {
-      requestAnimationFrame(updateUI);
-      return;
-    }
+    if (trackWidth === 0) { requestAnimationFrame(updateUI); return; }
 
     const pct = timeToPercent(frames[currentIdx].time, startTime, endTime);
-    const thumbCenterX = (pct / 100) * (trackWidth - HANDLE_SIZE) + HANDLE_RADIUS;
 
-    fill.style.width = thumbCenterX + 'px';
-
-    handle.style.left = thumbCenterX + 'px';
+    fill.style.width = pct + '%';
+    handle.style.left = pct + '%';
     handle.style.transform = 'translate(-50%, -50%)';
   }
 
@@ -238,8 +229,8 @@ export function initSlider(options) {
     document.addEventListener('touchend', onPointerUp);
   }
 
-  wrapper.addEventListener('mousedown', onPointerDown);
-  wrapper.addEventListener('touchstart', onPointerDown, { passive: false });
+  track.addEventListener('mousedown', onPointerDown);
+  track.addEventListener('touchstart', onPointerDown, { passive: false });
 
   // Play/pause
   function play() {
@@ -288,8 +279,8 @@ export function initSlider(options) {
     isPlaying: () => isPlaying,
     destroy: () => {
       pause();
-      wrapper.removeEventListener('mousedown', onPointerDown);
-      wrapper.removeEventListener('touchstart', onPointerDown);
+      track.removeEventListener('mousedown', onPointerDown);
+      track.removeEventListener('touchstart', onPointerDown);
     },
   };
 }

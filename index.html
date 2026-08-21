@@ -9,7 +9,7 @@
   <title>RainToday — Radar Pluie</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
 </head>
 <body>
   <!-- Map container -->
@@ -45,26 +45,27 @@
   <!-- Bottom panel: graph + slider + controls -->
   <div id="bottom-panel">
 
-    <!-- Ligne 1 : graphique de précipitations -->
-    <div id="graph-area">
-      <canvas id="graph-canvas"></canvas>
-    </div>
+    <!-- Graphique + slider dans le même wrapper pour aligner les largeurs -->
+    <div id="timeline-wrapper">
 
-    <!-- Ligne 2 : slider complet -->
-    <div id="slider-area">
-      <div id="slider-wrapper">
-        <div id="slider-track">
-          <div id="slider-fill"></div>
-        </div>
+      <!-- Barres de précipitation -->
+      <canvas id="graph-canvas"></canvas>
+
+      <!-- Slider : fill et handle ENFANTS de slider-track -->
+      <div id="slider-track">
+        <div id="slider-fill"></div>
         <div id="slider-handle"></div>
       </div>
+
+      <!-- Ticks temporels -->
       <div id="slider-ticks"></div>
+
     </div>
 
-    <!-- Ligne 3 : infos + contrôles -->
+    <!-- Ligne infos + contrôles -->
     <div id="time-info">
-      <div id="precip-info"></div>
-      <div id="current-time">--:--</div>
+      <span id="current-time">--:--</span>
+      <span id="precip-info"></span>
       <div id="controls">
         <button id="play-btn"></button>
         <button id="now-btn" title=""></button>
