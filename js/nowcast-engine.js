@@ -10,9 +10,9 @@
  * - Bilinear interpolation for sub-pixel accuracy
  */
 
-const WARP_ZOOM   = 5;
-const BLOCK_SIZE  = 24;
-const SEARCH_RAD  = 20;
+const WARP_ZOOM   = 4;
+const BLOCK_SIZE  = 16;
+const SEARCH_RAD  = 8;
 const MIN_RAIN_ALPHA = 15;
 
 function latLonToTileXY(lat, lon, zoom) {
@@ -32,7 +32,7 @@ export async function loadStitchedTile(host, path, lat, lon) {
   const center = latLonToTileXY(lat, lon, zoom);
   const n = Math.pow(2, zoom);
 
-  const GRID = 1;
+  const GRID = 0;
   const gridSize = (2 * GRID + 1) * 256;
 
   const offscreenCanvas = document.createElement('canvas');
@@ -262,7 +262,7 @@ export function backwardWarp(src, field, numBX, timeScale) {
  * @returns {Promise<Array<{time, imageData, bounds}>>}
  */
 export async function computeNowcastFrames(host, pastFrames, lat, lon, extraFrameCount = 6) {
-  const inputFrames = pastFrames.slice(-4);
+  const inputFrames = pastFrames.slice(-3);
   if (inputFrames.length < 2) return [];
 
   console.log(`[nowcast] Loading ${inputFrames.length} frames for motion estimation...`);

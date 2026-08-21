@@ -234,15 +234,12 @@ async function buildClientNowcast() {
   const pastOnly = radarData.frames.filter(f => f.time <= nowSec);
   if (pastOnly.length < 2) return;
 
-  const serverNowcastEnd = radarData.frames[radarData.frames.length - 1].time;
-  const gapSec = serverNowcastEnd - nowSec;
-  const extraCount = Math.ceil(((2 * 3600) - gapSec) / (10 * 60));
-  if (extraCount <= 0) return;
+  const TOTAL_FRAMES = 12;
 
-  console.log(`[nowcast] Server covers +${Math.round(gapSec / 60)}min, generating ${extraCount} extra client frames`);
+  console.log(`[nowcast] Generating ${TOTAL_FRAMES} client frames (H+10min → H+2h)`);
 
   clientNowcastFrames = await computeNowcastFrames(
-    radarData.host, pastOnly, userLat, userLon, extraCount,
+    radarData.host, pastOnly, userLat, userLon, TOTAL_FRAMES,
   );
 }
 
@@ -268,7 +265,7 @@ function updateRadar(idx) {
       }, clientNowcastFrames[0])
     : null;
 
-  const useClientFrame = isServerFuture && clientFrame && Math.abs(clientFrame.time - ts) < 15 * 60;
+  const useClientFrame = isServerFuture && clientFrame && Math.abs(clientFrame.time - ts) < 12 * 60;
 
   if (useClientFrame) {
     const extraSec = ts - lastServerFrame.time;
