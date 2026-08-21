@@ -290,37 +290,39 @@ html, body {
    BARRE INFOS
 ═══════════════════════════════════════ */
 #time-info {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
   margin-top: 8px;
+  height: 32px;
 }
 
 #current-time {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 20px;
   font-weight: 700;
   color: #1a1a2e;
-  letter-spacing: -0.5px;
-  min-width: 60px;
-  flex-shrink: 0;
-  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 #precip-info {
-  flex: 1;
   font-size: 12px;
   color: #666;
-  text-align: left;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 40%;
 }
 
 #controls {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 #play-btn {
