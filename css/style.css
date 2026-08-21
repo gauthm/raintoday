@@ -300,6 +300,20 @@ html, body {
   pointer-events: none;
 }
 
+#slider-handle::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 6px solid #4acaea;
+}
+
 #slider-handle.dragging {
   cursor: grabbing;
 }

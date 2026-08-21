@@ -114,19 +114,6 @@ export function renderGraph(canvas, data, currentIndex) {
       ctx.globalAlpha = 1.0;
       ctx.fillRect(x, y, barWidth, height);
       ctx.shadowBlur = 0;
-
-      // Triangle marker — aligned with slider handle position
-      ctx.fillStyle = '#4acaea';
-      const triX = barCount > 1
-        ? (i / (barCount - 1)) * cssWidth
-        : cssWidth / 2;
-      const triY = Math.max(0, y - 6);
-      ctx.beginPath();
-      ctx.moveTo(triX, triY + 5);
-      ctx.lineTo(triX - 4, triY);
-      ctx.lineTo(triX + 4, triY);
-      ctx.closePath();
-      ctx.fill();
     } else {
       // Past bars: 0.5 opacity, future bars: 0.7 opacity
       ctx.globalAlpha = i < nowIdx ? 0.5 : 0.7;
