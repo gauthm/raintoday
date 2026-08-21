@@ -1,6 +1,7 @@
 /**
  * Map module — Leaflet initialization, radar tile layer management, marker.
  */
+import { t } from './i18n.js';
 
 /**
  * Initialize a Leaflet map centered on given coordinates.
@@ -217,7 +218,7 @@ export function showRadarUnavailable(map, show) {
     radarBadge.onAdd = function () {
       const div = L.DomUtil.create('div', 'radar-badge');
       div.style.cssText = 'background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);border:1px solid rgba(255,80,80,0.4);border-radius:8px;padding:6px 12px;font-size:12px;color:#cc0000;margin-top:50px;margin-right:10px;';
-      div.textContent = 'Radar non disponible dans cette région';
+      div.textContent = t.radarUnavailable;
       return div;
     };
     radarBadge.addTo(map);

@@ -1,6 +1,7 @@
 /**
  * Geolocation module — wrapper around navigator.geolocation with fallback.
  */
+import { t } from './i18n.js';
 
 export const FALLBACK_LOCATION = {
   lat: 48.85,
@@ -27,7 +28,7 @@ export function getUserLocation(options = {}) {
 
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      reject(new Error('Geolocation non supportée par ce navigateur'));
+      reject(new Error(t.geolocNotSupported));
       return;
     }
 
@@ -42,16 +43,16 @@ export function getUserLocation(options = {}) {
         let message;
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            message = 'Géolocalisation refusée';
+            message = t.geolocDenied;
             break;
           case error.POSITION_UNAVAILABLE:
-            message = 'Position indisponible';
+            message = t.geolocUnavailable;
             break;
           case error.TIMEOUT:
-            message = 'Délai de géolocalisation dépassé';
+            message = t.geolocTimeout;
             break;
           default:
-            message = 'Erreur de géolocalisation';
+            message = t.geolocError;
         }
         reject(new Error(message));
       },

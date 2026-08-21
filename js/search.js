@@ -2,6 +2,7 @@
  * Search module — Place search with autocomplete dropdown.
  */
 import { searchPlaces } from './api/openmeteo.js';
+import { t } from './i18n.js';
 
 /**
  * Debounce a function call.
@@ -48,7 +49,7 @@ export function initSearch(onPlaceSelect) {
     try {
       const results = await searchPlaces(query);
       if (results.length === 0) {
-        resultsEl.innerHTML = '<div class="search-result-item" style="color:#888">Lieu introuvable</div>';
+        resultsEl.innerHTML = `<div class="search-result-item" style="color:#888">${t.placeNotFound}</div>`;
         resultsEl.classList.add('visible');
         return;
       }
@@ -73,7 +74,7 @@ export function initSearch(onPlaceSelect) {
         });
       });
     } catch (e) {
-      resultsEl.innerHTML = '<div class="search-result-item" style="color:#f87171">Erreur de recherche</div>';
+      resultsEl.innerHTML = `<div class="search-result-item" style="color:#f87171">${t.searchError}</div>`;
       resultsEl.classList.add('visible');
     }
   }, 300);

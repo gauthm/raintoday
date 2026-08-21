@@ -8,6 +8,7 @@ import { renderGraph, renderTimeLabels, findNearestIndex } from './graph.js';
 import { initSlider } from './slider.js';
 import { getUserLocationWithFallback } from './geolocation.js';
 import { initSearch } from './search.js';
+import { t } from './i18n.js';
 
 // State
 let map = null;
@@ -69,7 +70,7 @@ function updateTimeInfo(idx) {
 
   if (precipData.length === 0) {
     timeEl.textContent = '--:--';
-    precipEl.textContent = 'Données indisponibles';
+    precipEl.textContent = t.noData;
     return;
   }
 
@@ -81,20 +82,20 @@ function updateTimeInfo(idx) {
   const prob = entry.probability || 0;
   const now = Date.now();
   const isFuture = date.getTime() > now;
-  const probSuffix = isFuture && prob > 0 ? ` (${prob}%)` : '';
+  const probSuffix = isFuture && prob > 0 ? t.probSuffix(prob) : '';
 
   if (value <= 0) {
-    precipEl.textContent = prob > 0 ? `Pas de pluie · ${prob}% de risque` : 'Aucune précipitation';
+    precipEl.textContent = prob > 0 ? t.noRainRisk(prob) : t.noRain;
   } else if (value < 0.5) {
-    precipEl.textContent = `Très faible pluie · ${value.toFixed(1)} mm/h${probSuffix}`;
+    precipEl.textContent = t.veryLightRain(value) + probSuffix;
   } else if (value < 2) {
-    precipEl.textContent = `Faible pluie · ${value.toFixed(1)} mm/h${probSuffix}`;
+    precipEl.textContent = t.lightRain(value) + probSuffix;
   } else if (value < 10) {
-    precipEl.textContent = `Pluie modérée · ${value.toFixed(1)} mm/h${probSuffix}`;
+    precipEl.textContent = t.moderateRain(value) + probSuffix;
   } else if (value < 20) {
-    precipEl.textContent = `Forte pluie · ${value.toFixed(1)} mm/h${probSuffix}`;
+    precipEl.textContent = t.heavyRain(value) + probSuffix;
   } else {
-    precipEl.textContent = `Très forte pluie · ${value.toFixed(1)} mm/h${probSuffix}`;
+    precipEl.textContent = t.veryHeavyRain(value) + probSuffix;
   }
 }
 
@@ -224,11 +225,11 @@ async function loadPrecipitation(lat, lon) {
     precipData = extractWindow(result.data, now);
 
     if (precipData.length === 0) {
-      document.getElementById('precip-info').textContent = 'Aucune donnée de prévision';
+      document.getElementById('precip-info').textContent = t.noForecastData;
     } else {
       const hasRain = precipData.some(d => d.value > 0);
       if (!hasRain) {
-        document.getElementById('precip-info').textContent = 'Aucune précipitation prévue dans les 12h';
+        document.getElementById('precip-info').textContent = t.noRain12h;
       }
     }
 
@@ -236,7 +237,7 @@ async function loadPrecipitation(lat, lon) {
   } catch (e) {
     console.error('Precipitation load error:', e);
     precipData = [];
-    document.getElementById('precip-info').textContent = 'Données indisponibles';
+    document.getElementById('precip-info').textContent = t.noData;
     return [];
   }
 }
@@ -288,8 +289,8 @@ async function loadLocation(lat, lon) {
   centerMap(map, lat, lon, 9);
 
   // Show loading state
-  document.getElementById('current-time').textContent = 'Chargement...';
-  document.getElementById('precip-info').textContent = 'Chargement...';
+  document.getElementById('current-time').textContent = t.loading;
+  document.getElementById('precip-info').textContent = t.loading;
 
   // Load radar and precipitation in parallel
   await Promise.all([
@@ -308,14 +309,27 @@ async function loadLocation(lat, lon) {
 }
 
 /**
+ * Set static UI labels from i18n.
+ */
+function initStaticLabels() {
+  document.getElementById('search-input').placeholder = t.searchPlaceholder;
+  document.getElementById('search-input').setAttribute('aria-label', t.searchAria);
+  document.getElementById('geoloc-btn').title = t.geolocTitle;
+  document.getElementById('geoloc-btn').setAttribute('aria-label', t.geolocTitle);
+  document.getElementById('now-btn').textContent = t.nowBtn;
+  document.getElementById('now-btn').title = t.nowBtnTitle;
+  document.getElementById('play-btn').textContent = t.play;
+}
+
+/**
  * Initialize the app.
  */
 async function init() {
   // Get user location
   const location = await getUserLocationWithFallback();
-  if (location.isFallback) {
-    showToast(`${location.error} — recherchez un lieu`);
-  }
+    if (location.isFallback) {
+      showToast(t.searchPlaceHint(location.error));
+    }
 
   // Initialize map
   map = initMap(location.lat, location.lon);
@@ -334,7 +348,7 @@ async function init() {
 
     const loc = await getUserLocationWithFallback();
     if (loc.isFallback) {
-      showToast(`${loc.error} — recherchez un lieu`);
+      showToast(t.searchPlaceHint(loc.error));
     }
 
     // Reverse geocode to show place name
@@ -390,7 +404,8 @@ async function init() {
 }
 
 // Start app
+initStaticLabels();
 init().catch(e => {
   console.error('Init error:', e);
-  showToast("Erreur d'initialisation");
+  showToast(t.initError);
 });

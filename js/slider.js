@@ -1,6 +1,7 @@
 /**
  * Slider module — Unified time slider with drag, play/pause animation.
  */
+import { t } from './i18n.js';
 
 /**
  * Convert a timestamp to a percentage of the [start, end] range.
@@ -237,7 +238,7 @@ export function initSlider(options) {
   function play() {
     if (isPlaying) return;
     isPlaying = true;
-    playBtn.textContent = '⏸ Pause';
+    playBtn.textContent = t.pause;
     if (onPlayStateChange) onPlayStateChange(true);
 
     // Start from beginning if at end
@@ -257,7 +258,7 @@ export function initSlider(options) {
   function pause() {
     if (!isPlaying) return;
     isPlaying = false;
-    playBtn.textContent = '▶ Play';
+    playBtn.textContent = t.play;
     if (onPlayStateChange) onPlayStateChange(false);
     if (animationTimer) {
       clearInterval(animationTimer);
