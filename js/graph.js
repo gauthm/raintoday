@@ -87,12 +87,13 @@ export function renderGraph(canvas, data, currentIndex) {
   const maxValue = Math.max(1, dataMax);
 
   const barCount = data.length;
-  const gap = 2;
-  const totalGapWidth = gap * (barCount - 1);
-  const totalBarWidth = cssWidth - totalGapWidth;
-  const barWidth = Math.max(1, totalBarWidth / barCount);
   const maxHeight = cssHeight - 8;
-  const stepWidth = barWidth + gap;
+
+  // Bar width: distance between two slider positions, minus gap
+  // Slider maps index i to (i / (barCount - 1)) * cssWidth
+  const slotWidth = barCount > 1 ? cssWidth / (barCount - 1) : cssWidth;
+  const gap = 2;
+  const barWidth = Math.max(1, slotWidth - gap);
 
   // Find "now" index (the frame closest to current time)
   const now = new Date();
@@ -101,7 +102,9 @@ export function renderGraph(canvas, data, currentIndex) {
   for (let i = 0; i < barCount; i++) {
     const value = data[i].value;
     const height = mapValueToHeight(value, maxHeight, maxValue);
-    const x = i * stepWidth;
+    // Center bar on slider position: (i / (barCount - 1)) * cssWidth
+    const centerX = barCount > 1 ? (i / (barCount - 1)) * cssWidth : cssWidth / 2;
+    const x = centerX - barWidth / 2;
     const y = cssHeight - height;
 
     const color = colorForPrecipitation(value);
