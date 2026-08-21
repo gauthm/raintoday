@@ -169,93 +169,37 @@ html, body {
   opacity: 1;
 }
 
-/* Bottom panel */
+/* ── Panel flottant ── */
 #bottom-panel {
   position: absolute;
-  bottom: 16px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
-  width: 640px;
-  max-width: calc(100vw - 32px);
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 10px 16px 10px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  width: 660px;
+  max-width: calc(100vw - 24px);
+  background: rgba(255, 255, 255, 0.93);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.7);
+  border-radius: 18px;
+  padding: 12px 18px 10px;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.13),
+    0 1px 0 rgba(255,255,255,0.8) inset;
 }
 
-#time-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 6px;
-  gap: 8px;
-}
-
-#current-time {
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-#precip-info {
-  color: var(--text-dim);
-  font-size: 11px;
-  flex: 1;
-  text-align: center;
-}
-
-#controls {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-#play-btn {
-  background: rgba(0, 102, 255, 0.12);
-  border: 1px solid rgba(0, 102, 255, 0.3);
-  border-radius: 6px;
-  padding: 3px 10px;
-  color: var(--accent);
-  font-size: 11px;
-  font-family: var(--font);
-  cursor: pointer;
-}
-
-#play-btn:hover {
-  background: rgba(0, 102, 255, 0.22);
-}
-
-#now-btn {
-  background: rgba(0, 102, 255, 0.08);
-  border: 1px solid rgba(0, 102, 255, 0.2);
-  border-radius: 6px;
-  padding: 3px 10px;
-  color: var(--accent);
-  font-size: 11px;
-  font-family: var(--font);
-  cursor: pointer;
-  margin-left: 6px;
-}
-
-#now-btn:hover {
-  background: rgba(0, 102, 255, 0.18);
-}
-
-#chart-wrapper {
+/* ── Zone graphique ── */
+#graph-area {
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+  margin-bottom: 6px;
 }
 
 #graph-canvas {
   width: 100%;
-  height: 40px;
+  height: 44px;
   display: block;
+  border-radius: 6px;
 }
 
 #time-labels {
@@ -267,13 +211,18 @@ html, body {
   visibility: hidden;
 }
 
-/* Slider */
+/* ── Zone slider ── */
+#slider-area {
+  width: 100%;
+}
+
 #slider-track {
   position: relative;
-  height: 8px;
-  background: rgba(0, 0, 0, 0.1);
+  height: 4px;
+  background: rgba(0,0,0,0.10);
   border-radius: 4px;
   cursor: pointer;
+  margin: 10px 0 0;
 }
 
 #slider-fill {
@@ -281,35 +230,36 @@ html, body {
   left: 0;
   top: 0;
   height: 100%;
-  background: linear-gradient(90deg, #1a3a5a, #2a9ada, #3abada);
-  border-radius: 3px;
+  background: linear-gradient(90deg, #1a3a5a 0%, #2a7ada 55%, #4acaea 100%);
+  border-radius: 4px;
   pointer-events: none;
+  transform: none;
 }
 
 #slider-handle {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
   width: 16px;
   height: 16px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  border: 2px solid var(--accent);
+  border: 2.5px solid #0066ff;
+  box-shadow: 0 1px 6px rgba(0,102,255,0.3), 0 2px 8px rgba(0,0,0,0.15);
   cursor: grab;
   pointer-events: none;
-  margin-left: -8px;
+  margin-left: 0;
 }
 
 #slider-handle.dragging {
   cursor: grabbing;
+  box-shadow: 0 0 0 6px rgba(0,102,255,0.15), 0 2px 10px rgba(0,0,0,0.2);
 }
 
-/* Slider tick marks */
+/* ── Ticks ── */
 #slider-ticks {
   position: relative;
-  height: 20px;
-  margin-top: 2px;
+  height: 18px;
+  margin-top: 3px;
 }
 
 .slider-tick {
@@ -324,14 +274,86 @@ html, body {
 .slider-tick::before {
   content: '';
   width: 1px;
-  height: 5px;
-  background: var(--text-dim);
+  height: 4px;
+  background: rgba(0,0,0,0.2);
 }
 
 .slider-tick-label {
   font-size: 9px;
-  color: var(--text-dim);
+  color: #888;
   white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+
+/* ── Barre infos + contrôles ── */
+#time-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  gap: 8px;
+}
+
+#current-time {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a2e;
+  letter-spacing: -0.5px;
+  min-width: 52px;
+  white-space: nowrap;
+}
+
+#precip-info {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#controls {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+#play-btn {
+  background: rgba(0,102,255,0.10);
+  border: 1px solid rgba(0,102,255,0.28);
+  border-radius: 20px;
+  padding: 5px 14px;
+  color: #0066ff;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+#play-btn:hover {
+  background: rgba(0,102,255,0.20);
+}
+
+#now-btn {
+  background: transparent;
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 20px;
+  padding: 5px 14px;
+  color: #555;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+#now-btn:hover {
+  background: rgba(0,0,0,0.06);
+  color: #1a1a2e;
 }
 
 /* Leaflet marker override */
@@ -344,7 +366,7 @@ html, body {
   box-shadow: 0 0 12px rgba(0, 102, 255, 0.8);
 }
 
-/* Responsive */
+/* ── Responsive mobile ── */
 @media (max-width: 600px) {
   #search-container {
     width: 200px;
@@ -357,11 +379,20 @@ html, body {
 
   #bottom-panel {
     bottom: 10px;
-    padding: 8px 12px 8px;
+    padding: 10px 12px 8px;
+    border-radius: 14px;
   }
 
-  #chart-wrapper {
-    max-width: 100%;
+  #current-time {
+    font-size: 17px;
+  }
+
+  #precip-info {
+    font-size: 11px;
+  }
+
+  #graph-canvas {
+    height: 36px;
   }
 }
 

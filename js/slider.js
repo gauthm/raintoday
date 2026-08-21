@@ -157,13 +157,23 @@ export function initSlider(options) {
   function updateUI() {
     const pct = timeToPercent(frames[currentIdx].time, startTime, endTime);
     const trackWidth = track.offsetWidth;
-    const handleWidth = handle.offsetWidth;
+
+    if (trackWidth === 0) {
+      requestAnimationFrame(updateUI);
+      return;
+    }
+
+    const handleWidth = 16;
     const handleRadius = handleWidth / 2;
-    const centerX = (pct / 100) * (trackWidth - handleWidth) + handleRadius;
+
+    const thumbCenterX = (pct / 100) * (trackWidth - handleWidth) + handleRadius;
 
     fill.style.left = '0px';
-    fill.style.width = `${centerX}px`;
-    handle.style.left = `${centerX}px`;
+    fill.style.width = `${thumbCenterX}px`;
+    fill.style.transform = 'none';
+
+    handle.style.left = `${thumbCenterX}px`;
+    handle.style.transform = 'translate(-50%, -50%)';
   }
 
   function setIndex(idx) {
