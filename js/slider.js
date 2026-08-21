@@ -87,15 +87,30 @@ function formatTickTime(ts) {
 function renderTicks(ticksEl, frames) {
   ticksEl.innerHTML = '';
 
-  // Show every Nth frame as a tick to avoid crowding
   const maxTicks = 7;
   const step = Math.max(1, Math.ceil(frames.length / maxTicks));
+  const total = frames.length;
+  const startTime = frames[0].time;
+  const endTime = frames[total - 1].time;
 
-  for (let i = 0; i < frames.length; i += step) {
-    const pct = timeToPercent(frames[i].time, frames[0].time, frames[frames.length - 1].time);
+  const tickIndices = new Set();
+  for (let i = 0; i < total; i += step) tickIndices.add(i);
+  tickIndices.add(total - 1);
+
+  tickIndices.forEach(i => {
+    const pct = timeToPercent(frames[i].time, startTime, endTime);
+
     const tick = document.createElement('div');
     tick.className = 'slider-tick';
-    tick.style.left = `${pct}%`;
+    tick.style.left = pct + '%';
+
+    if (pct < 5) {
+      tick.style.transform = 'translateX(0%)';
+    } else if (pct > 95) {
+      tick.style.transform = 'translateX(-100%)';
+    } else {
+      tick.style.transform = 'translateX(-50%)';
+    }
 
     const label = document.createElement('span');
     label.className = 'slider-tick-label';
@@ -103,23 +118,7 @@ function renderTicks(ticksEl, frames) {
     tick.appendChild(label);
 
     ticksEl.appendChild(tick);
-  }
-
-  // Always show last frame
-  const lastIdx = frames.length - 1;
-  if (lastIdx % step !== 0) {
-    const pct = 100;
-    const tick = document.createElement('div');
-    tick.className = 'slider-tick';
-    tick.style.left = `${pct}%`;
-
-    const label = document.createElement('span');
-    label.className = 'slider-tick-label';
-    label.textContent = formatTickTime(frames[lastIdx].time);
-    tick.appendChild(label);
-
-    ticksEl.appendChild(tick);
-  }
+  });
 }
 
 /**
@@ -133,6 +132,7 @@ function renderTicks(ticksEl, frames) {
 export function initSlider(options) {
   const { frames, onTimeChange, onPlayStateChange, onDragEnd } = options;
 
+  const wrapper = document.getElementById('slider-wrapper');
   const track = document.getElementById('slider-track');
   const fill = document.getElementById('slider-fill');
   const handle = document.getElementById('slider-handle');
@@ -155,24 +155,21 @@ export function initSlider(options) {
   renderTicks(ticksEl, frames);
 
   function updateUI() {
-    const pct = timeToPercent(frames[currentIdx].time, startTime, endTime);
-    const trackWidth = track.offsetWidth;
+    const HANDLE_SIZE = 16;
+    const HANDLE_RADIUS = HANDLE_SIZE / 2;
 
+    const trackWidth = track.offsetWidth;
     if (trackWidth === 0) {
       requestAnimationFrame(updateUI);
       return;
     }
 
-    const handleWidth = 16;
-    const handleRadius = handleWidth / 2;
+    const pct = timeToPercent(frames[currentIdx].time, startTime, endTime);
+    const thumbCenterX = (pct / 100) * (trackWidth - HANDLE_SIZE) + HANDLE_RADIUS;
 
-    const thumbCenterX = (pct / 100) * (trackWidth - handleWidth) + handleRadius;
+    fill.style.width = thumbCenterX + 'px';
 
-    fill.style.left = '0px';
-    fill.style.width = `${thumbCenterX}px`;
-    fill.style.transform = 'none';
-
-    handle.style.left = `${thumbCenterX}px`;
+    handle.style.left = thumbCenterX + 'px';
     handle.style.transform = 'translate(-50%, -50%)';
   }
 
@@ -241,8 +238,8 @@ export function initSlider(options) {
     document.addEventListener('touchend', onPointerUp);
   }
 
-  track.addEventListener('mousedown', onPointerDown);
-  track.addEventListener('touchstart', onPointerDown, { passive: false });
+  wrapper.addEventListener('mousedown', onPointerDown);
+  wrapper.addEventListener('touchstart', onPointerDown, { passive: false });
 
   // Play/pause
   function play() {
@@ -291,8 +288,8 @@ export function initSlider(options) {
     isPlaying: () => isPlaying,
     destroy: () => {
       pause();
-      track.removeEventListener('mousedown', onPointerDown);
-      track.removeEventListener('touchstart', onPointerDown);
+      wrapper.removeEventListener('mousedown', onPointerDown);
+      wrapper.removeEventListener('touchstart', onPointerDown);
     },
   };
 }
